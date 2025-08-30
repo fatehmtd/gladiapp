@@ -12,77 +12,36 @@ namespace gladiapp
         namespace response
         {
             /**
-             * Represents metadata about an audio file.
-             * Contains information such as the file's ID, filename, and other properties.
-             */
-            struct AudioMetadata
-            {
-                std::string id;
-                std::string filename;
-                std::string extension;
-                std::size_t size;
-                double audio_duration;
-                int number_of_channels;
-
-                static AudioMetadata fromJson(const std::string &jsonString)
-                {
-                    AudioMetadata metadata;
-                    auto json = nlohmann::json::parse(jsonString);
-
-                    metadata.id = json.value("id", "");
-                    metadata.filename = json.value("filename", "");
-                    metadata.extension = json.value("extension", "");
-                    metadata.size = json.value("size", 0);
-                    metadata.audio_duration = json.value("audio_duration", 0.0);
-                    metadata.number_of_channels = json.value("number_of_channels", 0);
-
-                    return metadata;
-                }
-
-                std::string toString() const
-                {
-                    nlohmann::json j;
-                    j["id"] = id;
-                    j["filename"] = filename;
-                    j["extension"] = extension;
-                    j["size"] = size;
-                    j["audio_duration"] = audio_duration;
-                    j["number_of_channels"] = number_of_channels;
-                    return j.dump();
-                }
-            };
-
-            /**
              * Represents the response for an audio request.
              * Contains the audio file's URL and its metadata.
              */
             struct UploadResponse
             {
                 std::string audio_url;
+
+                /**
+                 * Represents metadata about an audio file.
+                 * Contains information such as the file's ID, filename, and other properties.
+                 */
+                struct AudioMetadata
+                {
+                    std::string id;
+                    std::string filename;
+                    std::string extension;
+                    std::size_t size;
+                    double audio_duration;
+                    int number_of_channels;
+
+                    static AudioMetadata fromJson(const std::string &jsonString);
+
+                    std::string toString() const;
+                };
+
                 AudioMetadata audio_metadata;
 
-                static UploadResponse fromJson(const std::string &jsonString)
-                {
-                    UploadResponse response;
-                    auto json = nlohmann::json::parse(jsonString);
+                static UploadResponse fromJson(const std::string &jsonString);
 
-                    response.audio_url = json.value("audio_url", "");
-
-                    if (json.contains("audio_metadata"))
-                    {
-                        response.audio_metadata = AudioMetadata::fromJson(json["audio_metadata"].dump());
-                    }
-
-                    return response;
-                }
-
-                std::string toString() const
-                {
-                    nlohmann::json j;
-                    j["audio_url"] = audio_url;
-                    j["audio_metadata"] = nlohmann::json::parse(audio_metadata.toString());
-                    return j.dump();
-                }
+                std::string toString() const;
             };
 
             /**
@@ -94,22 +53,9 @@ namespace gladiapp
                 std::string id;
                 std::string result_url;
 
-                static TranscriptionJobResponse fromJson(const std::string &jsonString)
-                {
-                    TranscriptionJobResponse response;
-                    auto json = nlohmann::json::parse(jsonString);
-                    response.id = json.value("id", "");
-                    response.result_url = json.value("result_url", "");
-                    return response;
-                }
+                static TranscriptionJobResponse fromJson(const std::string &jsonString);
 
-                std::string toString() const
-                {
-                    nlohmann::json j;
-                    j["id"] = id;
-                    j["result_url"] = result_url;
-                    return j.dump();
-                }
+                std::string toString() const;
             };
 
             /**
@@ -122,46 +68,163 @@ namespace gladiapp
                 std::string timestamp;
                 std::string path;
                 std::string request_id;
-                int status_code;
+                int status_code = 0;
                 std::string message;
                 std::vector<std::string> validation_errors;
 
-                static TranscriptionError fromJson(const std::string &jsonString)
+                static TranscriptionError fromJson(const std::string &jsonString);
+
+                std::string toString() const;
+            };
+
+            /**
+             * Represents a file to be transcribed.
+             * Contains information about the file's ID and filename.
+             * Additionally, it includes the file's source, duration, and number of channels.
+             */
+            struct TranscriptionFile
+            {
+                std::string id;
+                std::string filename;
+                std::string source;
+                double duration;
+                int number_of_channels;
+
+                static TranscriptionFile fromJson(const std::string &jsonString);
+
+                std::string toString() const;
+            };
+
+            struct SentenceError
+            {
+                int status_code;
+                std::string exception;
+                std::string message;
+
+                static SentenceError fromJson(const std::string &jsonString);
+
+                std::string toString() const;
+            };
+
+            /**
+             * Represents the result of a transcription job.
+             * Contains information about the job's ID, request ID, and other metadata.
+             * Additionally, it includes the job's status, created_at timestamp, and any error information.
+             */
+            struct TranscriptionResult
+            {
+                std::string id;
+                std::string request_id;
+                int version;
+                std::string status;
+                std::string created_at;
+                std::string kind;
+                std::optional<std::string> completed_at;
+                std::optional<int> error_code;
+                std::optional<TranscriptionFile> file;
+                std::string request_params;
+
+                /**
+                 * Represents the object containing the transcription result.
+                 * Contains metadata and the actual transcription result.
+                 */
+                struct TranscriptionObject
                 {
-                    TranscriptionError error;
-                    auto json = nlohmann::json::parse(jsonString);
-
-                    error.timestamp = json.value("timestamp", "");
-                    error.path = json.value("path", "");
-                    error.request_id = json.value("request_id", "");
-                    error.status_code = json.value("statusCode", 0);
-                    error.message = json.value("message", "");
-
-                    if (json.contains("validation_errors") && json["validation_errors"].is_array())
+                    /**
+                     * Represents the metadata for a transcription result.
+                     * Contains information about the audio duration and number of distinct channels.
+                     */
+                    struct Metadata
                     {
-                        for (const auto &validation_error : json["validation_errors"])
+                        double audio_duration;
+                        int number_of_distinct_channels;
+                        double billing_time;
+                        double transcription_time;
+
+                        static Metadata fromJson(const std::string &jsonString);
+                    };
+                    Metadata metadata;
+
+                    /**
+                     * Represents the result of a transcription job.
+                     * Contains the full transcript and any detected languages.
+                     */
+                    struct Result
+                    {
+                        std::string full_transcript;
+                        std::vector<std::string> languages;
+                        struct Utterance
                         {
-                            if (validation_error.is_string())
+                            std::string language;
+                            double start;
+                            double end;
+                            double confidence;
+                            int channel;
+
+                            struct Word
                             {
-                                error.validation_errors.push_back(validation_error.get<std::string>());
-                            }
-                        }
-                    }
+                                std::string word;
+                                double start;
+                                double end;
+                                double confidence;
 
-                    return error;
-                }
+                                static Word fromJson(const std::string &jsonString);
 
-                std::string toString() const
+                                std::string toString() const;
+                            };
+
+                            std::vector<Word> words;
+                            std::string text;
+                            int speaker;
+
+                            static Utterance fromJson(const std::string &jsonString);
+
+                            std::string toString() const;
+                        };
+                        std::vector<Utterance> utterances;
+
+                        struct Subtitle
+                        {
+                            std::string format;
+                            std::string subtitles;
+                            static Subtitle fromJson(const std::string &jsonString);
+                        };
+                        std::vector<Subtitle> subtitles;
+
+                        static Result fromJson(const std::string &jsonString);
+                    };
+
+                    Result result;
+
+                    static TranscriptionObject fromJson(const std::string &jsonString);
+                };
+                TranscriptionObject result;
+
+                struct Moderation
                 {
-                    nlohmann::json j;
-                    j["timestamp"] = timestamp;
-                    j["path"] = path;
-                    j["request_id"] = request_id;
-                    j["statusCode"] = status_code;
-                    j["message"] = message;
-                    j["validation_errors"] = validation_errors;
-                    return j.dump();
-                }
+                    bool success;
+                    bool is_empty;
+                    std::string results;
+                    double exec_time;
+                    std::optional<std::string> error;
+
+                    static Moderation fromJson(const std::string &jsonString);
+                };
+
+                static TranscriptionResult fromJson(const std::string &jsonString);
+            };
+
+            /**
+             * Represents the pagination information for a list of results.
+             * Contains the URLs for the first, current, and next pages of results.
+             */
+            struct TranscriptionListResults
+            {
+                std::string first;
+                std::string current;
+                std::optional<std::string> next;
+                std::vector<TranscriptionResult> items;
+                static TranscriptionListResults fromJson(const std::string &jsonString);
             };
         }
 
@@ -177,20 +240,7 @@ namespace gladiapp
                 int min_speakers;
                 int max_speakers;
                 std::optional<bool> enhanced;
-                nlohmann::json toJson() const
-                {
-                    // Convert the DiarizationConfig object to a JSON string
-                    // You can use a JSON library like nlohmann/json for this
-                    nlohmann::json j;
-                    j["number_of_speakers"] = number_of_speakers;
-                    j["min_speakers"] = min_speakers;
-                    j["max_speakers"] = max_speakers;
-                    if (enhanced.has_value())
-                    {
-                        j["enhanced"] = enhanced.value() ? "true" : "false";
-                    }
-                    return j;
-                }
+                nlohmann::json toJson() const;
             };
 
             /**
@@ -199,41 +249,20 @@ namespace gladiapp
              */
             struct TranslationConfig
             {
-                std::string model;
+                enum Model
+                {
+                    BASE,
+                    ENHANCED
+                };
+                Model model = Model::BASE;
                 std::vector<std::string> target_languages;
-                std::optional<bool> match_original_utterances;
+                std::optional<bool> match_original_utterances = true;
                 std::optional<bool> lipsync = true;
-                std::optional<bool> context_adaptation;
+                std::optional<bool> context_adaptation = true;
                 std::optional<std::string> context;
                 std::optional<bool> informal = false;
 
-                nlohmann::json toJson() const
-                {
-                    nlohmann::json j;
-                    j["model"] = model;
-                    j["target_languages"] = target_languages;
-                    if (match_original_utterances.has_value())
-                    {
-                        j["match_original_utterances"] = match_original_utterances.value() ? "true" : "false";
-                    }
-                    if (lipsync.has_value())
-                    {
-                        j["lipsync"] = lipsync.value() ? "true" : "false";
-                    }
-                    if (context_adaptation.has_value())
-                    {
-                        j["context_adaptation"] = context_adaptation.value() ? "true" : "false";
-                    }
-                    if (context.has_value())
-                    {
-                        j["context"] = context.value();
-                    }
-                    if (informal.has_value())
-                    {
-                        j["informal"] = informal.value() ? "true" : "false";
-                    }
-                    return j;
-                }
+                nlohmann::json toJson() const;
             };
 
             /**
@@ -257,21 +286,14 @@ namespace gladiapp
                     DEFAULT,
                     COMPLIANCE
                 };
-                std::optional<Style> style;
+                std::optional<Style> style = Style::DEFAULT;
 
-                std::string toString() const
-                {
-                    // Convert the SubtitlesConfig object to a JSON string
-                    // You can use a JSON library like nlohmann/json for this
-                    nlohmann::json j;
-                    j["formats"] = formats;
-                    j["maximum_characters_per_row"] = maximum_characters_per_row;
-                    j["maximum_rows_per_caption"] = maximum_rows_per_caption;
-                    j["style"] = style;
-                    return j.dump();
-                }
+                std::string toString() const;
             };
 
+            /**
+             * Represents the configuration for custom vocabulary.
+             */
             struct CustomVocabularyConfig
             {
                 std::string value;
@@ -280,6 +302,9 @@ namespace gladiapp
                 std::optional<std::string> language;
             };
 
+            /**
+             * Represents the configuration for callback settings.
+             */
             struct CallbackConfig
             {
                 std::string url;
@@ -294,15 +319,12 @@ namespace gladiapp
                  */
                 HttpMethod method;
 
-                std::string toJson() const
-                {
-                    nlohmann::json j;
-                    j["url"] = url;
-                    j["method"] = (method == HttpMethod::POST) ? "POST" : "PUT";
-                    return j.dump();
-                }
+                std::string toJson() const;
             };
 
+            /**
+             * Represents the configuration for summarization.
+             */
             struct SummarizationConfig
             {
                 enum Type
@@ -313,85 +335,55 @@ namespace gladiapp
                 };
                 std::vector<Type> types;
 
-                std::string toJson() const
-                {
-                    nlohmann::json j;
-                    std::vector<std::string> typeStrings;
-                    for (const auto &type : types)
-                    {
-                        switch (type)
-                        {
-                        case GENERAL:
-                            typeStrings.push_back("general");
-                            break;
-                        case BULLET_POINTS:
-                            typeStrings.push_back("bullet_points");
-                            break;
-                        case CONCISE:
-                            typeStrings.push_back("concise");
-                            break;
-                        }
-                    }
-                    j["summarization_config"] = typeStrings;
-                    return j.dump();
-                }
+                std::string toJson() const;
             };
 
+            /**
+             * Represents the configuration for custom spelling.
+             */
             struct CustomSpellingConfig
             {
                 std::unordered_map<std::string, std::vector<std::string>> spelling_dictionary;
 
-                nlohmann::json toJson() const
-                {
-                    nlohmann::json j;
-                    j["spelling_dictionary"] = spelling_dictionary;
-                    return j;
-                }
+                nlohmann::json toJson() const;
             };
 
+            /**
+             * Represents the configuration for structured data extraction.
+             */
             struct StructuredDataExtractionConfig
             {
                 std::vector<std::string> classes;
 
-                nlohmann::json toJson() const
-                {
-                    nlohmann::json j;
-                    j["structured_data_extraction_config"] = classes;
-                    return j;
-                }
+                nlohmann::json toJson() const;
             };
 
+            /**
+             * Represents the configuration for audio-to-LLM processing.
+             */
             struct AudioToLLMConfig
             {
                 std::vector<std::string> prompts;
 
-                nlohmann::json toJson() const
-                {
-                    nlohmann::json j;
-                    j["prompts"] = prompts;
-                    return j;
-                }
+                nlohmann::json toJson() const;
             };
 
+            /**
+             * Represents the configuration for language settings.
+             */
             struct LanguageConfig
             {
                 std::vector<std::string> languages;
                 bool code_switching = false;
 
-                nlohmann::json toJson() const
-                {
-                    nlohmann::json j;
-                    j["languages"] = languages;
-                    j["code_switching"] = code_switching;
-                    return j;
-                }
+                nlohmann::json toJson() const;
             };
 
             /**
              * Represents the configuration for audio requests.
              * Contains the audio file's URL and its processing options.
              */
-            struct AudioRequest
+            struct TranscriptionRequest
             {
                 std::string audio_url;
 
@@ -440,109 +432,25 @@ namespace gladiapp
 
                 std::optional<LanguageConfig> language_config;
 
-                std::string toJson() const
+                nlohmann::json toJson() const;
+            };
+
+            struct ListResultsQuery
+            {
+                int offset = 0;
+                int limit = 20;
+                std::string date;
+                std::string before_date;
+                std::string after_date;
+                enum Status
                 {
-                    nlohmann::json j;
-
-                    j["audio_url"] = audio_url;
-
-                    // Custom vocabulary
-                    j["custom_vocabulary"] = customVocabulary;
-                    if (customVocabulary && !custom_vocabulary_config.empty())
-                    {
-                        nlohmann::json vocab_array = nlohmann::json::array();
-                        for (const auto &vocab : custom_vocabulary_config)
-                        {
-                            nlohmann::json vocab_obj;
-                            vocab_obj["value"] = vocab.value;
-                            vocab_obj["pronunciations"] = vocab.pronunciations;
-                            if (vocab.intensity.has_value())
-                            {
-                                vocab_obj["intensity"] = vocab.intensity.value();
-                            }
-                            if (vocab.language.has_value())
-                            {
-                                vocab_obj["language"] = vocab.language.value();
-                            }
-                            vocab_array.push_back(vocab_obj);
-                        }
-                        j["custom_vocabulary_config"] = vocab_array;
-                    }
-
-                    // Callback
-                    j["callback"] = callback;
-                    if (callback && callback_config.has_value())
-                    {
-                        j["callback_config"] = nlohmann::json::parse(callback_config->toJson());
-                    }
-
-                    // Subtitles
-                    j["subtitles"] = subtitles;
-                    if (subtitles && subtitles_config.has_value())
-                    {
-                        j["subtitles_config"] = nlohmann::json::parse(subtitles_config->toString());
-                    }
-
-                    // Diarization
-                    j["diarization"] = diarization;
-                    if (diarization && diarization_config.has_value())
-                    {
-                        j["diarization_config"] = diarization_config->toJson();
-                    }
-
-                    // Translation
-                    j["translation"] = translation;
-                    if (translation)
-                    {
-                        j["translation_config"] = translation_config.toJson();
-                    }
-
-                    // Summarization
-                    j["summarization"] = summarization;
-                    if (summarization && summarization_config.has_value())
-                    {
-                        j["summarization_config"] = nlohmann::json::parse(summarization_config->toJson())["summarization_config"];
-                    }
-
-                    // Boolean flags
-                    j["moderation"] = moderation;
-                    j["named_entity_recognition"] = named_entity_recognition;
-                    j["chapterization"] = chapterization;
-                    j["name_consistency"] = name_consistency;
-                    j["sentiment_analysis"] = sentiment_analysis;
-                    j["sentences"] = sentences;
-                    j["display_mode"] = display_mode;
-                    j["punctuation_enhanced"] = punctuation_enhanced;
-
-                    // Custom spelling
-                    j["custom_spelling"] = custom_spelling;
-                    if (custom_spelling && custom_spelling_config.has_value())
-                    {
-                        j["custom_spelling_config"] = custom_spelling_config->toJson()["spelling_dictionary"];
-                    }
-
-                    // Structured data extraction
-                    j["structured_data_extraction"] = structured_data_extraction;
-                    if (structured_data_extraction && structured_data_extraction_config.has_value())
-                    {
-                        j["structured_data_extraction_config"] = structured_data_extraction_config->toJson()["structured_data_extraction_config"];
-                    }
-
-                    // Audio to LLM
-                    j["audio_to_llm"] = audio_to_llm;
-                    if (audio_to_llm && audio_to_llm_config.has_value())
-                    {
-                        j["audio_to_llm_config"] = audio_to_llm_config->toJson()["prompts"];
-                    }
-
-                    // Language config
-                    if (language_config.has_value())
-                    {
-                        j["language_config"] = language_config.value().toJson();
-                    }
-
-                    return j.dump();
-                }
+                    QUEUED,
+                    PROCESSING,
+                    DONE,
+                    ERROR
+                };
+                std::vector<Status> status;
+                std::string toString() const;
             };
         }
 
@@ -566,14 +474,30 @@ namespace gladiapp
              * @param filePath The path to the audio file to upload.
              * @return The response from the server.
              */
-            response::UploadResponse upload(const std::string &filePath);
+            response::UploadResponse upload(const std::string &filePath) const;
 
             /**
              * Sends a pre-recorded audio url for processing.
-             * @param fileUrl The URL of the audio file to process.
+             * @param transcriptionRequest The request containing the audio URL and other parameters.
              * @return The response from the server.
              */
-            response::UploadResponse preRecorded(const std::string &fileUrl);
+            response::TranscriptionJobResponse preRecorded(const request::TranscriptionRequest &transcriptionRequest,
+                                                           response::TranscriptionError *transcriptionError = nullptr) const;
+
+            /**
+             * Retrieves the result of a transcription job.
+             * @param id The ID of the transcription job.
+             * @return The response from the server.
+             */
+            response::TranscriptionResult getResult(const std::string &id,
+                                                    response::TranscriptionError *transcriptionError = nullptr) const;
+
+            /**
+             * Retrieves the results of all transcription jobs.
+             * @return A vector of responses from the server.
+             */
+            response::TranscriptionListResults getResults(const request::ListResultsQuery &query,
+                                                          response::TranscriptionError *transcriptionError = nullptr) const;
 
         private:
             std::unique_ptr<GladiaRestClientImpl> _restClientImpl;
