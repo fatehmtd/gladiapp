@@ -1,0 +1,309 @@
+# GladiaPP - C++ Client Library for Gladia API
+
+A modern C++ client library for interacting with the Gladia audio transcription API. This library provides a simple and efficient way to upload audio files, create transcription jobs, and retrieve results using the Gladia v2 API.
+
+## ⚠️ Disclaimer
+
+This is a **community-driven project** and is **not affiliated with Gladia in any way**. This library is developed and maintained by the community for educational and practical purposes. Gladia is a trademark of its respective owners.
+
+## Features
+
+- 🎵 **Audio Upload**: Upload audio files directly to Gladia's servers
+- 📝 **Transcription**: Create and manage transcription jobs
+- 🌍 **Translation**: Support for multi-language translation
+- 👥 **Speaker Diarization**: Identify different speakers in audio
+- 📱 **Subtitles**: Generate SRT and VTT subtitle formats
+- 🔍 **Moderation**: Content moderation capabilities
+- 📊 **Async Support**: Asynchronous operations for better performance
+- 🛡️ **Error Handling**: Comprehensive error handling and validation
+
+## Requirements
+
+- **C++17** or later
+- **CMake 3.16** or later
+- **Boost** (system, thread components)
+- **OpenSSL**
+- **Internet connection** for API calls
+
+### Dependencies (automatically fetched)
+
+- [nlohmann/json](https://github.com/nlohmann/json) - JSON parsing
+- [spdlog](https://github.com/gabime/spdlog) - Logging
+
+## Installation
+
+### Using CMake
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/fatehmtd/gladiapp.git
+cd gladiapp
+```
+
+2. Create a build directory:
+
+```bash
+mkdir build && cd build
+```
+
+3. Configure and build:
+
+```bash
+cmake ..
+make
+```
+
+### System Dependencies
+
+#### macOS (using Homebrew)
+
+```bash
+brew install boost openssl cmake
+```
+
+#### Ubuntu/Debian
+
+```bash
+sudo apt-get install libboost-all-dev libssl-dev cmake build-essential
+```
+
+#### CentOS/RHEL
+
+```bash
+sudo yum install boost-devel openssl-devel cmake gcc-c++
+```
+
+#### Windows
+
+**Using vcpkg (Recommended):**
+
+```powershell
+# Install vcpkg if you haven't already
+git clone https://github.com/Microsoft/vcpkg.git
+cd vcpkg
+.\bootstrap-vcpkg.bat
+
+# Install dependencies
+.\vcpkg install boost openssl cmake
+```
+
+**Using Visual Studio:**
+
+- Install Visual Studio 2019/2022 with C++ development tools
+- Use vcpkg integration: `.\vcpkg integrate install`
+- Open the project with CMake support in Visual Studio
+
+**Using Visual Studio Code:**
+
+- Install Visual Studio Code
+- Install the following extensions:
+  - C/C++ Extension Pack
+  - CMake Tools
+  - CMake Language Support
+- Install dependencies via vcpkg or Chocolatey (see above)
+- Open the project folder in VS Code
+- Configure CMake kit when prompted
+- Use Ctrl+Shift+P → "CMake: Configure" to configure the project
+- Use Ctrl+Shift+P → "CMake: Build" to build the project
+
+**Build on Windows:**
+
+```powershell
+mkdir build && cd build
+cmake .. -DCMAKE_TOOLCHAIN_FILE=path/to/vcpkg/scripts/buildsystems/vcpkg.cmake
+cmake --build . --config Release
+```
+
+## Quick Start
+
+### Basic Usage
+
+```cpp
+#include "gladiapp/gladiapp_rest.hpp"
+#include <future>
+
+int main() {
+    // Initialize client with your API key
+    gladiapp::v2::GladiaRestClient client("your-api-key-here");
+    
+    try {
+        // Upload audio file
+        auto uploadResponse = client.upload("/path/to/your/audio.wav");
+        
+        // Create transcription request
+        gladiapp::v2::request::TranscriptionRequest request;
+        request.audio_url = uploadResponse.audio_url;
+        request.diarization = true;
+        request.subtitles = true;
+        
+        // Start transcription job
+        auto jobResponse = client.preRecorded(request);
+        
+        // Poll for results
+        std::string status = "";
+        while (status != "done" && status != "error") {
+            auto result = client.getResult(jobResponse.id);
+            status = result.status;
+            std::this_thread::sleep_for(std::chrono::seconds(5));
+        }
+        
+        std::cout << "Transcription completed!" << std::endl;
+        
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+    
+    return 0;
+}
+```
+
+### Async Upload Example
+
+```cpp
+// Perform async upload while doing other work
+std::future<gladiapp::v2::response::UploadResponse> uploadFuture = 
+    std::async([&client]() {
+        return client.upload("/path/to/audio.wav");
+    });
+
+// Do other work here...
+
+// Get upload result
+auto uploadResponse = uploadFuture.get();
+```
+
+## API Reference
+
+### GladiaRestClient
+
+#### Constructor
+
+```cpp
+GladiaRestClient(const std::string& apiKey);
+```
+
+#### Methods
+
+- `upload(const std::string& filePath)` - Upload audio file
+- `preRecorded(const TranscriptionRequest& request, TranscriptionError* error = nullptr)` - Create transcription job
+- `getResult(const std::string& id, TranscriptionError* error = nullptr)` - Get transcription result
+- `getResults(const ListResultsQuery& query, TranscriptionError* error = nullptr)` - List all results
+- `deleteResult(const std::string& id, TranscriptionError* error = nullptr)` - Delete a result
+
+### Configuration Options
+
+#### TranscriptionRequest Features
+
+- `diarization` - Speaker identification
+- `translation` - Multi-language translation
+- `subtitles` - Subtitle generation (SRT/VTT)
+- `moderation` - Content moderation
+- `sentences` - Sentence-level timestamps
+- `named_entity_recognition` - Extract named entities
+- `sentiment_analysis` - Analyze sentiment
+- `summarization` - Generate summaries
+
+## Project Structure
+
+```text
+gladiapp/
+├── CMakeLists.txt              # Root CMake configuration
+├── README                      # This file
+├── gladiapp/                   # Main library source
+│   ├── CMakeLists.txt         # Library CMake configuration
+│   ├── main.cpp               # Example application
+│   ├── include/               # Header files
+│   │   └── gladiapp/
+│   │       ├── gladiapp.hpp
+│   │       ├── gladiapp_rest.hpp
+│   │       └── utils.hpp
+│   └── src/                   # Implementation files
+│       ├── gladiapp_rest.cpp
+│       ├── gladiapp_rest_request.cpp
+│       └── gladiapp_rest_response.cpp
+└── build/                     # Build artifacts (generated)
+```
+
+## Contributing
+
+We welcome contributions! This is a community-driven project, and we appreciate any help to improve it.
+
+### How to Contribute
+
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
+4. **Push** to the branch (`git push origin feature/amazing-feature`)
+5. **Open** a Pull Request
+
+### Development Guidelines
+
+- Follow modern C++ best practices (C++17+)
+- Add tests for new features
+- Update documentation as needed
+- Ensure code compiles without warnings
+- Use meaningful commit messages
+
+## TODO
+
+- [ ] **Testing Suite**
+  - [ ] Unit tests for all API endpoints
+  - [ ] Integration tests with mock server
+  - [ ] Performance benchmarks
+
+- [ ] **Features**
+  - [ ] Real-time transcription support
+  - [ ] Webhook callback implementation
+  - [ ] Batch processing capabilities
+  - [ ] Custom vocabulary configuration
+  - [ ] Audio format validation
+
+- [ ] **Documentation**
+  - [ ] Complete API documentation with Doxygen
+  - [ ] More usage examples
+  - [ ] Tutorial for beginners
+  - [ ] Performance optimization guide
+
+- [ ] **Error Handling**
+  - [ ] Better error messages
+  - [ ] Retry mechanisms
+  - [ ] Rate limiting handling
+  - [ ] Network timeout configuration
+
+- [ ] **Performance**
+  - [ ] Connection pooling
+  - [ ] Streaming uploads for large files
+  - [ ] Memory optimization
+  - [ ] Async/await pattern improvements
+
+## License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+### Why MIT License?
+
+- ✅ **Free for everyone** - Use in personal, commercial, or open source projects
+- ✅ **Simple and permissive** - No complex legal requirements
+- ✅ **Maximum adoption** - Widely trusted by developers and companies
+- ✅ **Community-friendly** - Encourages contributions and collaboration
+
+Feel free to use GladiaPP in your C++ projects! Just include the copyright notice and license text.
+
+## Support
+
+- 📄 **Documentation**: Check the header files for detailed API documentation
+- 🐛 **Issues**: Report bugs or request features via [GitHub Issues](https://github.com/fatehmtd/gladiapp/issues)
+- 💬 **Discussions**: Join community discussions in [GitHub Discussions](https://github.com/fatehmtd/gladiapp/discussions)
+
+## Acknowledgments
+
+- **Gladia Team** - For providing the excellent transcription API
+- **nlohmann/json** - For the amazing JSON library
+- **spdlog** - For the fast logging library
+- **Boost Libraries** - For networking and threading support
+- **Community Contributors** - Thank you for making this project better!
+
+---
+
+**Note**: This project is not affiliated with, endorsed by, or connected to Gladia. It is an independent, community-driven client library for educational and practical use.
