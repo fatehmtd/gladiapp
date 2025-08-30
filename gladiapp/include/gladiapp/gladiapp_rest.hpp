@@ -499,6 +499,13 @@ namespace gladiapp
             response::TranscriptionListResults getResults(const request::ListResultsQuery &query,
                                                           response::TranscriptionError *transcriptionError = nullptr) const;
 
+            /**
+             * Deletes a transcription job.
+             * @param id The ID of the transcription job.
+             */
+            void deleteResult(const std::string &id,
+                              response::TranscriptionError *transcriptionError = nullptr) const;
+
         private:
             std::unique_ptr<GladiaRestClientImpl> _restClientImpl;
         };

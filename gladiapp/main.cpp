@@ -59,13 +59,14 @@ int main(int ac, char **av)
                 std::this_thread::sleep_for(std::chrono::seconds(5));
             }
 
+            spdlog::info("getting transcription results...");
             auto results = client.getResults(gladiapp::v2::request::ListResultsQuery({.offset = 0,
-                                                                                      .limit = 100,
-                                                                                      .status = {gladiapp::v2::request::ListResultsQuery::Status::DONE}}));
+                                                                                      .limit = 1000}));
 
             for (const auto &result : results.items)
             {
-                spdlog::info("Transcription result: {}", result.status);
+                spdlog::info("deleting result: {}", result.id);
+                client.deleteResult(result.id);
             }
         }
         else

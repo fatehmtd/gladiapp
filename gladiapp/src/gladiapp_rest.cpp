@@ -33,3 +33,7 @@ response::TranscriptionListResults gladiapp::v2::GladiaRestClient::getResults(co
 {
     return _restClientImpl->getResults(query, transcriptionError);
 }
+void gladiapp::v2::GladiaRestClient::deleteResult(const std::string &id, response::TranscriptionError *transcriptionError) const
+{
+    _restClientImpl->deleteResult(id, transcriptionError);
+}
