@@ -281,7 +281,8 @@ namespace gladiapp
 
                         for (size_t i = 0; i < query.status.size(); ++i)
                         {
-                            if (i > 0) {
+                            if (i > 0)
+                            {
                                 stringStream << ",";
                             }
                             switch (query.status[i])
@@ -342,6 +343,63 @@ namespace gladiapp
                 }
 
                 return response::TranscriptionListResults();
+            }
+
+            void deleteResult(const std::string &id, response::TranscriptionError *transcriptionError) const
+            {
+                try
+                {
+                    // SSL setup (same as before)
+                    ssl::context sslContext(ssl::context::sslv23_client);
+                    auto const results = _resolver.resolve(gladiapp::v2::common::HOST, "443");
+
+                    beast::tcp_stream tcpStream(_ioContext);
+                    tcpStream.connect(results);
+
+                    ssl::stream<beast::tcp_stream> sslStream(std::move(tcpStream), sslContext);
+                    sslStream.handshake(ssl::stream_base::client);
+
+                    std::ostringstream stringStream;
+                    stringStream << gladiapp::v2::common::PRERECORDED_ENDPOINT << "/" << id;
+                    std::string queryString = stringStream.str();
+
+                    // Use buffer_body with the multipart data
+                    http::request<http::empty_body> httpRequest{
+                        http::verb::delete_,
+                        queryString,
+                        11};
+                    httpRequest.set(http::field::host, gladiapp::v2::common::HOST);
+                    httpRequest.set(gladiapp::v2::headers::X_GLADIA_KEY, _apiKey);
+                    httpRequest.set(http::field::user_agent, gladiapp::v2::common::USER_AGENT);
+                    httpRequest.prepare_payload();
+
+                    http::write(sslStream, httpRequest);
+
+                    beast::flat_buffer readBuffer;
+                    http::response<http::string_body> httpResponse;
+                    http::read(sslStream, readBuffer, httpResponse);
+
+                    if (httpResponse.result() != http::status::accepted)
+                    {
+                        std::ostringstream oss;
+                        oss << "Failed to delete transcription result, error code: " << (int)httpResponse.result()
+                            << ", message: " << httpResponse.body();
+                        spdlog::error(oss.str());
+                        if (transcriptionError != nullptr)
+                        {
+                            *transcriptionError = response::TranscriptionError::fromJson(httpResponse.body());
+                        }
+                    }
+                    else
+                    {
+                        spdlog::info("Successfully deleted result: {}", id);
+                    }
+                }
+                catch (const std::exception &e)
+                {
+                    spdlog::error("Error occurred: {}", e.what());
+                    spdlog::throw_spdlog_ex(e.what());
+                }
             }
 
         private:
