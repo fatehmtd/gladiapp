@@ -337,20 +337,35 @@ GladiaRestClient(const std::string& apiKey);
 ```text
 gladiapp/
 ├── CMakeLists.txt              # Root CMake configuration
-├── README                      # This file
-├── gladiapp/                   # Main library source
-│   ├── CMakeLists.txt         # Library CMake configuration
-│   ├── main.cpp               # Example application
-│   ├── include/               # Header files
-│   │   └── gladiapp/
-│   │       ├── gladiapp.hpp
-│   │       ├── gladiapp_rest.hpp
-│   │       └── utils.hpp
-│   └── src/                   # Implementation files
-│       ├── gladiapp_rest.cpp
-│       ├── gladiapp_rest_request.cpp
-│       └── gladiapp_rest_response.cpp
-└── build/                     # Build artifacts (generated)
+├── README.md                   # This file
+├── LICENSE                     # MIT License file
+├── .gitignore                  # Git ignore rules
+├── .vscode/                    # VS Code configuration
+├── build/                      # Build artifacts (generated)
+├── install/                    # Installation directory (generated)
+│   ├── bin/                   # Installed executables
+│   ├── include/               # Installed headers
+│   └── lib/                   # Installed libraries
+├── scripts/                    # Build and utility scripts
+│   └── run_example.sh.in      # Template for example runner script
+├── examples/                   # Example applications
+│   └── example-rest/          # REST API example
+│       ├── CMakeLists.txt     # Example build configuration
+│       ├── main.cpp           # Example source code
+│       └── testing.wav        # Sample audio file for testing
+└── gladiapp/                  # Main library source
+    ├── CMakeLists.txt         # Library CMake configuration
+    ├── include/               # Header files
+    │   └── gladiapp/
+    │       ├── gladiapp.hpp           # Main library header
+    │       ├── gladiapp_rest.hpp      # REST API client header
+    │       ├── utils.hpp              # Utility functions
+    │       └── impl/                  # Implementation details
+    │           └── gladia_rest_client_boost_impl.hpp
+    └── src/                   # Implementation files
+        ├── gladiapp_rest.cpp          # REST client implementation
+        ├── gladiapp_rest_request.cpp  # Request structures
+        └── gladiapp_rest_response.cpp # Response structures
 ```
 
 ## Contributing
