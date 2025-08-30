@@ -5,6 +5,8 @@
 #include <nlohmann/json.hpp>
 #include <memory>
 
+#include "gladiapp_export.h"
+
 namespace gladiapp
 {
     namespace v2
@@ -459,7 +461,7 @@ namespace gladiapp
          */
         class GladiaRestClientImpl;
 
-        class GladiaRestClient
+        class GLADIAPP_EXPORT GladiaRestClient
         {
         public:
             GladiaRestClient() = delete;

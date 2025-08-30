@@ -52,3 +52,4 @@ _deps/
 *.gcda
 *.gcov
 .vscode/
+install/
