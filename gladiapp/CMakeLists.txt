@@ -42,16 +42,15 @@ FetchContent_MakeAvailable(nlohmann_json)
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${OPENSSL_INCLUDE_DIR})
 
-add_executable(GLADIAPP
-    main.cpp
+add_library(gladiapp SHARED
     src/gladiapp_rest.cpp
     src/gladiapp_rest_request.cpp
     src/gladiapp_rest_response.cpp
 )
 
-target_include_directories(GLADIAPP PRIVATE include)
+target_include_directories(gladiapp PRIVATE include)
 
-target_link_libraries(GLADIAPP
+target_link_libraries(gladiapp
     PRIVATE
     spdlog::spdlog
     nlohmann_json::nlohmann_json
@@ -59,3 +58,34 @@ target_link_libraries(GLADIAPP
     Boost::thread
     ${OPENSSL_LIBRARIES}
 )
+
+# Generate export header
+include(GenerateExportHeader)
+generate_export_header(gladiapp
+    BASE_NAME gladiapp
+    EXPORT_FILE_NAME gladiapp_export.h
+)
+
+target_include_directories(gladiapp PUBLIC
+    $<INSTALL_INTERFACE:include>  # For installed package (optional but good practice)
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> # For direct build
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}> # To export the symbols header
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/gladiapp # to simplify the internal include files
+)
+
+# Installation rules
+install(TARGETS gladiapp
+        EXPORT gladiappTargets
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        INCLUDES DESTINATION include)
+
+install(DIRECTORY include/
+    DESTINATION include
+    FILES_MATCHING PATTERN "*.hpp"
+    PATTERN "impl" EXCLUDE)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/gladiapp_export.h
+        DESTINATION include/gladiapp)
+

@@ -173,6 +173,134 @@ std::future<gladiapp::v2::response::UploadResponse> uploadFuture =
 auto uploadResponse = uploadFuture.get();
 ```
 
+## Examples
+
+### REST API Example
+
+The repository includes a complete working example that demonstrates all the major features of the GladiaPP library. The example is located in the `examples/example-rest/` directory.
+
+#### Building and Running the Example
+
+1. **Build the project** (if you haven't already):
+
+```bash
+mkdir build && cd build
+cmake ..
+cmake --build .
+```
+
+2. **Install the example** to the install directory:
+
+```bash
+cmake --install . --prefix ./install
+```
+
+3. **Run the example**:
+
+```bash
+cd install/bin
+./run_example.sh
+```
+
+#### What the Example Demonstrates
+
+The example (`examples/example-rest/main.cpp`) showcases:
+
+- **🎵 Async Audio Upload**: Uploads a test audio file (`testing.wav`) asynchronously while performing other tasks
+- **📝 Transcription Job Creation**: Creates a comprehensive transcription job with multiple features enabled
+- **👥 Speaker Diarization**: Identifies different speakers in the audio
+- **🛡️ Content Moderation**: Applies content moderation to the transcription
+- **📱 Subtitle Generation**: Generates both VTT and SRT subtitle formats
+- **📊 Sentence-level Timestamps**: Provides detailed timing information
+- **🌍 Multi-language Translation**: Translates the transcription to French, German, and Spanish
+- **🔄 Job Polling**: Polls the transcription status until completion
+- **📋 Results Management**: Lists all transcription results and cleans them up
+
+#### Example Features Configuration
+
+```cpp
+gladiapp::v2::request::TranscriptionRequest request;
+request.audio_url = response.audio_url;
+request.diarization = true;                    // Speaker identification
+request.moderation = true;                     // Content moderation
+request.subtitles = true;                      // Subtitle generation
+request.sentences = true;                      // Sentence timestamps
+
+// Configure subtitle formats
+request.subtitles_config = gladiapp::v2::request::SubtitlesConfig();
+request.subtitles_config->formats = {
+    gladiapp::v2::request::SubtitlesConfig::Format::VTT,
+    gladiapp::v2::request::SubtitlesConfig::Format::SRT
+};
+
+// Configure translation
+request.translation = true;
+request.translation_config.target_languages = {"fr", "de", "es"};
+```
+
+#### Example Output
+
+When you run the example, you'll see output similar to:
+
+```text
+[2024-08-30 10:30:15] [info] Upload started, doing other work...
+[2024-08-30 10:30:18] [info] response: {"audio_url":"https://api.gladia.io/v2/upload/abc123..."}
+[2024-08-30 10:30:19] [info] Transcription job created, ID: job_abc123...
+[2024-08-30 10:30:24] [info] Transcription result: queued
+[2024-08-30 10:30:29] [info] Transcription result: processing
+[2024-08-30 10:30:34] [info] Transcription result: done
+[2024-08-30 10:30:35] [info] getting transcription results...
+[2024-08-30 10:30:35] [info] deleting result: job_abc123...
+```
+
+#### Required Files
+
+The example includes:
+
+- **`main.cpp`**: The main example source code
+- **`testing.wav`**: A sample audio file for testing
+- **`CMakeLists.txt`**: Build configuration for the example
+- **`run_example.sh`**: Launcher script that sets up the library path
+
+#### API Key Note
+
+⚠️ **Important**: The example uses a temporary API key for demonstration purposes. For production use, you should:
+
+1. **Get your own API key** from [Gladia](https://gladia.io)
+2. **Replace the temporary key** in `main.cpp`:
+
+```cpp
+// Replace this line
+constexpr const char *tempApiKey = "temporary-demo-key";
+
+// With your actual API key
+constexpr const char *tempApiKey = "your-actual-api-key";
+```
+
+3. **Use environment variables** for better security:
+
+```cpp
+#include <cstdlib>
+
+int main(int ac, char **av) {
+    const char* apiKey = std::getenv("GLADIA_API_KEY");
+    if (!apiKey) {
+        std::cerr << "Please set GLADIA_API_KEY environment variable" << std::endl;
+        return 1;
+    }
+    
+    gladiapp::v2::GladiaRestClient client(apiKey);
+    // ... rest of the code
+}
+```
+
+Then run with:
+
+```bash
+export GLADIA_API_KEY="your-actual-api-key"
+./run_example.sh
+```
+
 ## API Reference
 
 ### GladiaRestClient

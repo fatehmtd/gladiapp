@@ -1,20 +1,22 @@
 #include <iostream>
 #include <spdlog/spdlog.h>
 #include <future>
-#include "./include/gladiapp/gladiapp_rest.hpp"
+#include <gladiapp/gladiapp_rest.hpp>
 
 constexpr const char *tempApiKey = "a273934e-8ff7-4814-a41a-ba507614743d";
 
 int main(int ac, char **av)
 {
-
     gladiapp::v2::GladiaRestClient client(tempApiKey);
 
     // prepare the async upload
-    std::future<gladiapp::v2::response::UploadResponse> uploadFuture = std::async([&client]()
+    std::future<gladiapp::v2::response::UploadResponse> uploadFuture = std::async([&client, av]()
                                                                                   {
         try {
-            return client.upload("/Users/fateh/Documents/testing.wav");
+            // Get the directory where the executable is located
+            std::string executableDir = std::filesystem::path(av[0]).parent_path();
+            std::string audioFilePath = std::filesystem::path(executableDir) / "testing.wav";
+            return client.upload(audioFilePath);
         } catch (const std::exception& e) {
             spdlog::error("Error occurred during upload: {}", e.what());
             return gladiapp::v2::response::UploadResponse();
