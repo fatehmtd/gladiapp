@@ -44,8 +44,12 @@ include_directories(${OPENSSL_INCLUDE_DIR})
 
 add_executable(GLADIAPP
     main.cpp
-    gladiapp_rest.cpp
+    src/gladiapp_rest.cpp
+    src/gladiapp_rest_request.cpp
+    src/gladiapp_rest_response.cpp
 )
+
+target_include_directories(GLADIAPP PRIVATE include)
 
 target_link_libraries(GLADIAPP
     PRIVATE
