@@ -42,7 +42,7 @@ FetchContent_MakeAvailable(nlohmann_json)
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${OPENSSL_INCLUDE_DIR})
 
-add_library(gladiapp SHARED
+add_library(gladiapp STATIC
     src/gladiapp_rest.cpp
     src/gladiapp_rest_request.cpp
     src/gladiapp_rest_response.cpp
