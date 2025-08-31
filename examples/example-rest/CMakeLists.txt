@@ -50,14 +50,3 @@ install(TARGETS gladiapp_rest_example
 
 install(FILES testing.wav
         DESTINATION bin)
-
-# Create a launcher script for easy execution
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../../scripts/run_example.sh.in
-               ${CMAKE_CURRENT_BINARY_DIR}/run_example.sh
-               @ONLY)
-
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/run_example.sh
-        DESTINATION bin
-        PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
-                     GROUP_EXECUTE GROUP_READ
-                     WORLD_EXECUTE WORLD_READ)
