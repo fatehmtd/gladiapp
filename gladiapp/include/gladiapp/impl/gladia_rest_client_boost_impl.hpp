@@ -15,6 +15,13 @@
 #include <nlohmann/json.hpp>
 #include "../utils.hpp"
 
+#ifdef _WIN32
+// Undefine Windows ERROR macro that conflicts with our enum
+#ifdef ERROR
+#undef ERROR
+#endif
+#endif
+
 namespace beast = boost::beast;
 namespace http = beast::http;
 namespace net = boost::asio;
@@ -298,6 +305,7 @@ namespace gladiapp
                                 break;
                             case request::ListResultsQuery::Status::QUEUED:
                                 stringStream << "queued";
+                                break;
                             }
                         }
                     }
