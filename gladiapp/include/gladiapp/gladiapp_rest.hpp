@@ -17,7 +17,7 @@ namespace gladiapp
              * Represents the response for an audio request.
              * Contains the audio file's URL and its metadata.
              */
-            struct UploadResponse
+            struct GLADIAPP_EXPORT UploadResponse
             {
                 std::string audio_url;
 
@@ -50,7 +50,7 @@ namespace gladiapp
              * Represents the response for a transcription job request.
              * Contains the transcription's ID and the URL to the result.
              */
-            struct TranscriptionJobResponse
+            struct GLADIAPP_EXPORT TranscriptionJobResponse
             {
                 std::string id;
                 std::string result_url;
@@ -65,7 +65,7 @@ namespace gladiapp
              * Contains information about the error's timestamp, path, and message.
              * Additionally, it includes the request ID, status code, and any validation errors.
              */
-            struct TranscriptionError
+            struct GLADIAPP_EXPORT TranscriptionError
             {
                 std::string timestamp;
                 std::string path;
@@ -84,7 +84,7 @@ namespace gladiapp
              * Contains information about the file's ID and filename.
              * Additionally, it includes the file's source, duration, and number of channels.
              */
-            struct TranscriptionFile
+            struct GLADIAPP_EXPORT TranscriptionFile
             {
                 std::string id;
                 std::string filename;
@@ -97,7 +97,7 @@ namespace gladiapp
                 std::string toString() const;
             };
 
-            struct SentenceError
+            struct GLADIAPP_EXPORT SentenceError
             {
                 int status_code;
                 std::string exception;
@@ -113,7 +113,7 @@ namespace gladiapp
              * Contains information about the job's ID, request ID, and other metadata.
              * Additionally, it includes the job's status, created_at timestamp, and any error information.
              */
-            struct TranscriptionResult
+            struct GLADIAPP_EXPORT TranscriptionResult
             {
                 std::string id;
                 std::string request_id;
@@ -220,7 +220,7 @@ namespace gladiapp
              * Represents the pagination information for a list of results.
              * Contains the URLs for the first, current, and next pages of results.
              */
-            struct TranscriptionListResults
+            struct GLADIAPP_EXPORT TranscriptionListResults
             {
                 std::string first;
                 std::string current;
@@ -236,7 +236,7 @@ namespace gladiapp
              * Represents information about an audio file.
              * Contains the audio file's URL and its metadata.
              */
-            struct DiarizationConfig
+            struct GLADIAPP_EXPORT DiarizationConfig
             {
                 int number_of_speakers;
                 int min_speakers;
@@ -249,7 +249,7 @@ namespace gladiapp
              * Represents the configuration for audio translation.
              * Contains the model to be used and the target languages for translation.
              */
-            struct TranslationConfig
+            struct GLADIAPP_EXPORT TranslationConfig
             {
                 enum Model
                 {
@@ -271,7 +271,7 @@ namespace gladiapp
              * Represents the configuration for subtitles.
              * Contains the formats for the generated subtitles.
              */
-            struct SubtitlesConfig
+            struct GLADIAPP_EXPORT SubtitlesConfig
             {
                 enum Format
                 {
@@ -296,7 +296,7 @@ namespace gladiapp
             /**
              * Represents the configuration for custom vocabulary.
              */
-            struct CustomVocabularyConfig
+            struct GLADIAPP_EXPORT CustomVocabularyConfig
             {
                 std::string value;
                 std::vector<std::string> pronunciations;
@@ -307,7 +307,7 @@ namespace gladiapp
             /**
              * Represents the configuration for callback settings.
              */
-            struct CallbackConfig
+            struct GLADIAPP_EXPORT CallbackConfig
             {
                 std::string url;
 
@@ -327,7 +327,7 @@ namespace gladiapp
             /**
              * Represents the configuration for summarization.
              */
-            struct SummarizationConfig
+            struct GLADIAPP_EXPORT SummarizationConfig
             {
                 enum Type
                 {
@@ -343,7 +343,7 @@ namespace gladiapp
             /**
              * Represents the configuration for custom spelling.
              */
-            struct CustomSpellingConfig
+            struct GLADIAPP_EXPORT CustomSpellingConfig
             {
                 std::unordered_map<std::string, std::vector<std::string>> spelling_dictionary;
 
@@ -353,7 +353,7 @@ namespace gladiapp
             /**
              * Represents the configuration for structured data extraction.
              */
-            struct StructuredDataExtractionConfig
+            struct GLADIAPP_EXPORT StructuredDataExtractionConfig
             {
                 std::vector<std::string> classes;
 
@@ -363,7 +363,7 @@ namespace gladiapp
             /**
              * Represents the configuration for audio-to-LLM processing.
              */
-            struct AudioToLLMConfig
+            struct GLADIAPP_EXPORT AudioToLLMConfig
             {
                 std::vector<std::string> prompts;
 
@@ -373,7 +373,7 @@ namespace gladiapp
             /**
              * Represents the configuration for language settings.
              */
-            struct LanguageConfig
+            struct GLADIAPP_EXPORT LanguageConfig
             {
                 std::vector<std::string> languages;
                 bool code_switching = false;
@@ -385,7 +385,7 @@ namespace gladiapp
              * Represents the configuration for audio requests.
              * Contains the audio file's URL and its processing options.
              */
-            struct TranscriptionRequest
+            struct GLADIAPP_EXPORT TranscriptionRequest
             {
                 std::string audio_url;
 

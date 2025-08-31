@@ -7,6 +7,7 @@ constexpr const char *tempApiKey = "a273934e-8ff7-4814-a41a-ba507614743d";
 
 int main(int ac, char **av)
 {
+    spdlog::info("Starting GladiaRestClient...");
     gladiapp::v2::GladiaRestClient client(tempApiKey);
 
     // prepare the async upload
@@ -14,8 +15,8 @@ int main(int ac, char **av)
                                                                                   {
         try {
             // Get the directory where the executable is located
-            std::string executableDir = std::filesystem::path(av[0]).parent_path();
-            std::string audioFilePath = std::filesystem::path(executableDir) / "testing.wav";
+            std::string executableDir = std::filesystem::path(av[0]).parent_path().string();
+            std::string audioFilePath = (std::filesystem::path(executableDir) / "testing.wav").string();
             return client.upload(audioFilePath);
         } catch (const std::exception& e) {
             spdlog::error("Error occurred during upload: {}", e.what());
@@ -62,8 +63,10 @@ int main(int ac, char **av)
             }
 
             spdlog::info("getting transcription results...");
-            auto results = client.getResults(gladiapp::v2::request::ListResultsQuery({.offset = 0,
-                                                                                      .limit = 1000}));
+            gladiapp::v2::request::ListResultsQuery query;
+            query.offset = 0;
+            query.limit = 1000;
+            auto results = client.getResults(query);
 
             for (const auto &result : results.items)
             {
