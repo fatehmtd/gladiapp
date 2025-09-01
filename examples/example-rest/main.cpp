@@ -38,9 +38,9 @@ int main(int ac, char **av)
         request.moderation = true;
         request.subtitles = true;
         request.sentences = true;
-        request.subtitles_config = gladiapp::v2::request::SubtitlesConfig();
-        request.subtitles_config->formats = {gladiapp::v2::request::SubtitlesConfig::Format::VTT,
-                                             gladiapp::v2::request::SubtitlesConfig::Format::SRT};
+        request.subtitles_config = gladiapp::v2::request::TranscriptionRequest::SubtitlesConfig();
+        request.subtitles_config->formats = {gladiapp::v2::request::TranscriptionRequest::SubtitlesConfig::Format::VTT,
+                                             gladiapp::v2::request::TranscriptionRequest::SubtitlesConfig::Format::SRT};
 
         request.translation = true;
         request.translation_config.target_languages = {"fr", "de", "es"};

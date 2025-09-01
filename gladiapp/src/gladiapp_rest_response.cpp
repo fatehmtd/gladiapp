@@ -116,7 +116,7 @@ namespace gladiapp
             }
 
             // TranscriptionFile implementations
-            TranscriptionFile TranscriptionFile::fromJson(const std::string &jsonString)
+            TranscriptionResult::TranscriptionFile TranscriptionResult::TranscriptionFile::fromJson(const std::string &jsonString)
             {
                 TranscriptionFile file;
                 auto json = nlohmann::json::parse(jsonString);
@@ -133,7 +133,7 @@ namespace gladiapp
                 return file;
             }
 
-            std::string TranscriptionFile::toString() const
+            std::string TranscriptionResult::TranscriptionFile::toString() const
             {
                 nlohmann::json j;
                 j["id"] = id;
