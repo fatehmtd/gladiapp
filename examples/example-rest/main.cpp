@@ -30,7 +30,7 @@ int main(int ac, char **av)
     {
         // Wait for upload to complete and get result
         gladiapp::v2::response::UploadResponse response = uploadFuture.get();
-        spdlog::info("response: {}", response.toString());
+        spdlog::info("Upload complete, response: {}", response.toString());
 
         gladiapp::v2::request::TranscriptionRequest request;
         request.audio_url = response.audio_url;
@@ -47,6 +47,8 @@ int main(int ac, char **av)
 
         gladiapp::v2::response::TranscriptionError transcriptionError;
 
+        spdlog::info("Creating transcription job...");
+
         gladiapp::v2::response::TranscriptionJobResponse transcriptionJobResponse = client.preRecorded(request, &transcriptionError);
         if (transcriptionError.status_code == 0)
         {
@@ -62,11 +64,15 @@ int main(int ac, char **av)
                 std::this_thread::sleep_for(std::chrono::seconds(5));
             }
 
+            spdlog::info("Transcription job completed with status: {}", status);
+
             spdlog::info("getting transcription results...");
             gladiapp::v2::request::ListResultsQuery query;
             query.offset = 0;
             query.limit = 1000;
             auto results = client.getResults(query);
+
+            spdlog::info("Deleting transcription {} results", results.items.size());
 
             for (const auto &result : results.items)
             {

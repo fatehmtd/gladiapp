@@ -76,7 +76,7 @@ namespace gladiapp
 
                     nlohmann::json toJson() const;
                 };
-                LanguageConfig language_config;
+                std::optional<LanguageConfig> language_config;
 
                 struct PreProcessing
                 {
@@ -88,7 +88,7 @@ namespace gladiapp
 
                     nlohmann::json toJson() const;
                 };
-                PreProcessing pre_processing;
+                std::optional<PreProcessing> pre_processing;
 
                 struct RealtimeProcessing
                 {
@@ -155,7 +155,11 @@ namespace gladiapp
 
                         nlohmann::json toJson() const;
                     };
+                    std::optional<CustomVocabularyConfig> custom_vocabulary_config;
+
+                    nlohmann::json toJson() const;
                 };
+                std::optional<RealtimeProcessing> realtime_processing;
 
                 struct PostProcessing
                 {
@@ -181,6 +185,7 @@ namespace gladiapp
 
                     nlohmann::json toJson() const;
                 };
+                std::optional<PostProcessing> post_processing;
 
                 struct MessagesConfig {
                     std::optional<bool> receive_partial_transcripts = false;

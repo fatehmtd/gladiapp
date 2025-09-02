@@ -43,9 +43,16 @@ include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${OPENSSL_INCLUDE_DIR})
 
 add_library(gladiapp STATIC
+    # error
+    src/gladiapp_error.cpp
+    # rest
     src/gladiapp_rest.cpp
     src/gladiapp_rest_request.cpp
     src/gladiapp_rest_response.cpp
+    # websockets
+    src/gladiapp_ws.cpp
+    src/gladiapp_ws_request.cpp
+    src/gladiapp_ws_response.cpp
 )
 
 target_include_directories(gladiapp PRIVATE include)
