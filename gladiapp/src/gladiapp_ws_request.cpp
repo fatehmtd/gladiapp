@@ -1,6 +1,6 @@
 #include "gladiapp/gladiapp_ws_request.hpp"
 
-nlohmann::json gladiapp::v2::request::InitializeSessionRequest::LanguageConfig::toJson() const
+nlohmann::json gladiapp::v2::ws::request::InitializeSessionRequest::LanguageConfig::toJson() const
 {
     nlohmann::json json;
     json["languages"] = languages;
@@ -8,7 +8,7 @@ nlohmann::json gladiapp::v2::request::InitializeSessionRequest::LanguageConfig::
     return json;
 }
 
-nlohmann::json gladiapp::v2::request::InitializeSessionRequest::PreProcessing::toJson() const
+nlohmann::json gladiapp::v2::ws::request::InitializeSessionRequest::PreProcessing::toJson() const
 {
     nlohmann::json json;
     json["audio_enhancer"] = audio_enhancer;
@@ -16,7 +16,7 @@ nlohmann::json gladiapp::v2::request::InitializeSessionRequest::PreProcessing::t
     return json;
 }
 
-nlohmann::json gladiapp::v2::request::InitializeSessionRequest::RealtimeProcessing::CustomVocabularyConfig::Vocabulary::toJson() const
+nlohmann::json gladiapp::v2::ws::request::InitializeSessionRequest::RealtimeProcessing::CustomVocabularyConfig::Vocabulary::toJson() const
 {
     nlohmann::json json;
     json["value"] = value;
@@ -26,14 +26,14 @@ nlohmann::json gladiapp::v2::request::InitializeSessionRequest::RealtimeProcessi
     return json;
 }
 
-nlohmann::json gladiapp::v2::request::InitializeSessionRequest::RealtimeProcessing::CustomVocabularyConfig::CustomSpellingConfig::toJson() const
+nlohmann::json gladiapp::v2::ws::request::InitializeSessionRequest::RealtimeProcessing::CustomVocabularyConfig::CustomSpellingConfig::toJson() const
 {
     nlohmann::json json;
     json["spelling_dictionary"] = spelling_dictionary;
     return json;
 }
 
-nlohmann::json gladiapp::v2::request::InitializeSessionRequest::RealtimeProcessing::CustomVocabularyConfig::TranslationConfig::toJson() const
+nlohmann::json gladiapp::v2::ws::request::InitializeSessionRequest::RealtimeProcessing::CustomVocabularyConfig::TranslationConfig::toJson() const
 {
     nlohmann::json json;
     switch (model)
@@ -69,7 +69,7 @@ nlohmann::json gladiapp::v2::request::InitializeSessionRequest::RealtimeProcessi
     return json;
 }
 
-nlohmann::json gladiapp::v2::request::InitializeSessionRequest::RealtimeProcessing::CustomVocabularyConfig::toJson() const
+nlohmann::json gladiapp::v2::ws::request::InitializeSessionRequest::RealtimeProcessing::CustomVocabularyConfig::toJson() const
 {
     nlohmann::json json;
     if (vocabulary.has_value())
@@ -103,7 +103,7 @@ nlohmann::json gladiapp::v2::request::InitializeSessionRequest::RealtimeProcessi
     return json;
 }
 
-nlohmann::json gladiapp::v2::request::InitializeSessionRequest::PostProcessing::SummarizationConfig::toJson() const
+nlohmann::json gladiapp::v2::ws::request::InitializeSessionRequest::PostProcessing::SummarizationConfig::toJson() const
 {
     nlohmann::json json;
     for (const auto &type : types)
@@ -124,7 +124,7 @@ nlohmann::json gladiapp::v2::request::InitializeSessionRequest::PostProcessing::
     return json;
 }
 
-nlohmann::json gladiapp::v2::request::InitializeSessionRequest::RealtimeProcessing::toJson() const
+nlohmann::json gladiapp::v2::ws::request::InitializeSessionRequest::RealtimeProcessing::toJson() const
 {
     nlohmann::json json;
     json["custom_vocabulary"] = custom_vocabulary;
@@ -135,7 +135,7 @@ nlohmann::json gladiapp::v2::request::InitializeSessionRequest::RealtimeProcessi
     return json;
 }
 
-nlohmann::json gladiapp::v2::request::InitializeSessionRequest::PostProcessing::toJson() const
+nlohmann::json gladiapp::v2::ws::request::InitializeSessionRequest::PostProcessing::toJson() const
 {
     nlohmann::json json;
     if (summarization.has_value())
@@ -153,7 +153,7 @@ nlohmann::json gladiapp::v2::request::InitializeSessionRequest::PostProcessing::
     return json;
 }
 
-nlohmann::json gladiapp::v2::request::InitializeSessionRequest::MessagesConfig::toJson() const
+nlohmann::json gladiapp::v2::ws::request::InitializeSessionRequest::MessagesConfig::toJson() const
 {
     nlohmann::json json;
     if (receive_partial_transcripts.has_value())
@@ -195,7 +195,7 @@ nlohmann::json gladiapp::v2::request::InitializeSessionRequest::MessagesConfig::
     return json;
 }
 
-nlohmann::json gladiapp::v2::request::InitializeSessionRequest::CallbackConfig::toJson() const
+nlohmann::json gladiapp::v2::ws::request::InitializeSessionRequest::CallbackConfig::toJson() const
 {
     nlohmann::json json;
     if (url.has_value())
@@ -250,18 +250,10 @@ nlohmann::json gladiapp::v2::request::InitializeSessionRequest::CallbackConfig::
     return json;
 }
 
-nlohmann::json gladiapp::v2::request::InitializeSessionRequest::toJson() const
+nlohmann::json gladiapp::v2::ws::request::InitializeSessionRequest::toJson() const
 {
     nlohmann::json json;
-    switch (region)
-    {
-    case Region::US_WEST:
-        json["region"] = "us_west";
-        break;
-    case Region::EU_WEST:
-        json["region"] = "eu_west";
-        break;
-    }
+
     switch (encoding)
     {
     case Encoding::WAV_PCM:
@@ -274,37 +266,37 @@ nlohmann::json gladiapp::v2::request::InitializeSessionRequest::toJson() const
         json["encoding"] = "wav/ulaw";
         break;
     }
-    switch (bitDepth)
+    switch (bit_depth)
     {
     case BitDepth::BIT_DEPTH_8:
-        json["bitDepth"] = 8;
+        json["bit_depth"] = 8;
         break;
     case BitDepth::BIT_DEPTH_16:
-        json["bitDepth"] = 16;
+        json["bit_depth"] = 16;
         break;
     case BitDepth::BIT_DEPTH_24:
-        json["bitDepth"] = 24;
+        json["bit_depth"] = 24;
         break;
     case BitDepth::BIT_DEPTH_32:
-        json["bitDepth"] = 32;
+        json["bit_depth"] = 32;
         break;
     }
-    switch (sampleRate)
+    switch (sample_rate)
     {
     case SampleRate::SAMPLE_RATE_8000:
-        json["sampleRate"] = 8000;
+        json["sample_rate"] = 8000;
         break;
     case SampleRate::SAMPLE_RATE_16000:
-        json["sampleRate"] = 16000;
+        json["sample_rate"] = 16000;
         break;
     case SampleRate::SAMPLE_RATE_32000:
-        json["sampleRate"] = 32000;
+        json["sample_rate"] = 32000;
         break;
     case SampleRate::SAMPLE_RATE_44100:
-        json["sampleRate"] = 44100;
+        json["sample_rate"] = 44100;
         break;
     case SampleRate::SAMPLE_RATE_48000:
-        json["sampleRate"] = 48000;
+        json["sample_rate"] = 48000;
         break;
     }
     json["channels"] = channels;
