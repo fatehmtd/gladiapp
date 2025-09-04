@@ -6,17 +6,20 @@
 #include "../gladiapp_error.hpp"
 
 #include <boost/beast/core.hpp>
-#include <boost/beast/http.hpp>
-#include <boost/beast/version.hpp>
+#include <boost/beast/websocket.hpp>
+#include <boost/beast/websocket/ssl.hpp>
 #include <boost/asio/connect.hpp>
 #include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/ssl.hpp>
+#include <boost/asio/ssl/stream.hpp>
+#include <boost/asio/ssl/context.hpp>
+#include <boost/asio/ssl/host_name_verification.hpp>
+#include <boost/beast/http.hpp>
 #include <sstream>
 #include <spdlog/spdlog.h>
 #include <iostream>
 #include <fstream>
 #include <nlohmann/json.hpp>
-#include <spdlog/spdlog.h>
+#include <functional>
 
 namespace beast = boost::beast;
 namespace http = beast::http;
@@ -24,7 +27,7 @@ namespace net = boost::asio;
 namespace ssl = net::ssl;
 using tcp = net::ip::tcp;
 
-using Websocket = websocket::stream<ssl::stream<tcp::socket>>;
+using Websocket = boost::beast::websocket::stream<ssl::stream<tcp::socket>>;
 
 using namespace gladiapp::v2::response;
 using namespace gladiapp::v2::ws::response;
@@ -35,7 +38,8 @@ namespace gladiapp::v2::ws
     class GladiaWebsocketClientImpl
     {
     public:
-        GladiaWebsocketClientImpl(const std::string &apiKey) : _apiKey(apiKey), _resolver(_ioContext)
+        GladiaWebsocketClientImpl(const std::string &apiKey) : _apiKey(apiKey),
+                                                               _resolver(_ioContext)
         {
         }
 
@@ -119,20 +123,75 @@ namespace gladiapp::v2::ws
 
     private:
         std::string _apiKey;
-        mutable net::io_context _ioContext;
         mutable tcp::resolver _resolver;
+        mutable boost::asio::io_context _ioContext;
     };
 
     class GladiaWebsocketClientSessionImpl
     {
     public:
-        GladiaWebsocketClientSessionImpl(const std::string &endpoint) : _endpoint(endpoint), _sslContext(boost::asio::ssl::context::sslv23_client)
+        GladiaWebsocketClientSessionImpl(const std::string &endpoint) : _endpoint(endpoint),
+                                                                        _sslContext(boost::asio::ssl::context::sslv23_client),
+                                                                        _webSocket(_ioContext, _sslContext)
         {
         }
 
-        bool connectAndStart()
+        ~GladiaWebsocketClientSessionImpl()
         {
-            return false;
+            _keepReading = false;
+            if (_dataReceptionThread.joinable())
+            {
+                _dataReceptionThread.join();
+            }
+            disconnect();
+        }
+
+        bool connectAndStart(const std::function<void(const std::string &)> &dataReadCallback)
+        {
+            if (!connect())
+            {
+                return false;
+            }
+            if (!startThread(dataReadCallback))
+            {
+                disconnect();
+                return false;
+            }
+            return true;
+        }
+
+        void sendStopSignal()
+        {
+            if (_canSendData)
+            {
+                try
+                {
+                    _webSocket.text(true);
+                    _webSocket.write(net::buffer(std::string("{\"signal\": \"stop\"}")));
+                    spdlog::info("Sent stop signal to WebSocket.");
+                }
+                catch (std::exception &e)
+                {
+                    spdlog::error("Error sending stop signal: {}", e.what());
+                }
+                _canSendData = false;
+            }
+        }
+
+        void disconnect()
+        {
+            if (_webSocket.is_open())
+            {
+                try
+                {
+                    _webSocket.close();
+                    spdlog::info("WebSocket disconnected.");
+                }
+                catch (std::exception &e)
+                {
+                    spdlog::error("Error during WebSocket close: {}", e.what());
+                }
+            }
         }
 
     private:
@@ -162,8 +221,57 @@ namespace gladiapp::v2::ws
             return {host, target};
         }
 
-        void processData(const std::string &data)
+        bool connect()
         {
+            try
+            {
+                std::pair<std::string, std::string> hostAndTarget = separateHostFromTarget(_endpoint);
+                tcp::resolver resolver{_ioContext};
+                spdlog::debug("Connecting to {}:{} ...", hostAndTarget.first, hostAndTarget.second);
+                auto const results = resolver.resolve(hostAndTarget.first, hostAndTarget.second);
+                net::connect(_webSocket.next_layer().lowest_layer(), results.begin(), results.end());
+
+                spdlog::debug("Performing SSL handshake...");
+                _webSocket.next_layer().set_verify_callback(ssl::host_name_verification(hostAndTarget.first));
+                _webSocket.next_layer().handshake(ssl::stream_base::client);
+
+                _webSocket.handshake(hostAndTarget.first, hostAndTarget.second);
+                spdlog::debug("WebSocket connected successfully!");
+                return true;
+            }
+            catch (std::exception &e)
+            {
+                spdlog::error("Error occurred: {}", e.what());
+            }
+            return true;
+        }
+
+        bool startThread(const std::function<void(const std::string &)> &dataReadCallback)
+        {
+            _dataReceptionThread = std::thread([this, dataReadCallback]()
+                                               {
+                try
+                {
+                    beast::flat_buffer buffer;
+                    beast::error_code ec;
+                    while (_webSocket.is_open() && _keepReading)
+                    {                        
+                        size_t bytesRead = _webSocket.read(buffer, ec);
+                        if (ec)
+                        {
+                            spdlog::error("Error reading from WebSocket: {}", ec.message());
+                            break;
+                        }
+                        std::string data(beast::buffers_to_string(buffer.data()));
+                        buffer.consume(bytesRead);
+                        dataReadCallback(data);
+                    }
+                }
+                catch (std::exception &e)
+                {
+                    spdlog::error("Error in data reception thread: {}", e.what());
+                } });
+            return true;
         }
 
     private:
@@ -172,5 +280,7 @@ namespace gladiapp::v2::ws
         boost::beast::net::ssl::context _sslContext;
         Websocket _webSocket;
         std::thread _dataReceptionThread;
+        bool _keepReading;
+        bool _canSendData;
     };
 }

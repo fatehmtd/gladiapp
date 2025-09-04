@@ -10,7 +10,9 @@ include(FetchContent)
 include(GNUInstallDirs)
 
 # Modern CMake: Use Boost's imported targets and avoid FindBoost
-find_package(Boost REQUIRED COMPONENTS system thread CONFIG)
+find_package(boost_system REQUIRED CONFIG)
+find_package(boost_thread REQUIRED CONFIG)
+find_package(boost_beast REQUIRED CONFIG)
 find_package(OpenSSL REQUIRED)
 
 # Debug: Print Boost information

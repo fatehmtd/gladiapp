@@ -67,7 +67,7 @@ namespace gladiapp
                 /**
                  * Sends the stop signal.
                  */
-                bool stop();
+                bool sendStopSignal();
 
                 /**
                  * Disconnects from the WebSocket server.
@@ -75,9 +75,14 @@ namespace gladiapp
                 void disconnect();
 
                 /**
-                 * Sends audio data to the WebSocket server.
+                 * Sends audio data as binary to the WebSocket server.
                  */
-                bool sendAudio(const char *audioData, int size);
+                bool sendAudioBinary(const uint8_t *audioData, int size) const;
+
+                /**
+                 * Sends audio data as base64-encoded JSON to the WebSocket server.
+                 */
+                bool sendAudioJson(const uint8_t *audioData, int size) const;
 
                 using OnConnectedCallback = std::function<void(void)>;
                 using OnSpeechEventCallback = std::function<void(const response::SpeechEvent &event)>;
