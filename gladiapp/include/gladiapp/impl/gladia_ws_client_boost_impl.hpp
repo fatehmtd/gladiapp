@@ -123,8 +123,8 @@ namespace gladiapp::v2::ws
 
     private:
         std::string _apiKey;
+        mutable net::io_context _ioContext;
         mutable tcp::resolver _resolver;
-        mutable boost::asio::io_context _ioContext;
     };
 
     class GladiaWebsocketClientSessionImpl
@@ -160,22 +160,25 @@ namespace gladiapp::v2::ws
             return true;
         }
 
-        void sendStopSignal()
+        bool sendStopSignal()
         {
             if (_canSendData)
             {
+                _canSendData = false;
                 try
                 {
                     _webSocket.text(true);
-                    _webSocket.write(net::buffer(std::string("{\"signal\": \"stop\"}")));
+                    nlohmann::json stopJson = {{"type", "stop_recording"}};
+                    _webSocket.write(net::buffer(stopJson.dump()));
                     spdlog::info("Sent stop signal to WebSocket.");
                 }
                 catch (std::exception &e)
                 {
                     spdlog::error("Error sending stop signal: {}", e.what());
+                    return false;
                 }
-                _canSendData = false;
             }
+            return true;
         }
 
         void disconnect()
@@ -184,7 +187,7 @@ namespace gladiapp::v2::ws
             {
                 try
                 {
-                    _webSocket.close();
+                    _webSocket.close(beast::websocket::close_code::normal);
                     spdlog::info("WebSocket disconnected.");
                 }
                 catch (std::exception &e)
@@ -192,6 +195,60 @@ namespace gladiapp::v2::ws
                     spdlog::error("Error during WebSocket close: {}", e.what());
                 }
             }
+        }
+
+        bool isConnected() const
+        {
+            return _webSocket.is_open();
+        }
+
+        bool sendAudioBinary(const uint8_t *audioData, int size) const
+        {
+            if (!_webSocket.is_open())
+            {
+                spdlog::warn("WebSocket is not open. Cannot send audio binary data.");
+                return false;
+            }
+            if (_canSendData)
+            {
+                try
+                {
+                    _webSocket.text(false);
+                    _webSocket.binary(true);
+                    _webSocket.write(net::buffer(audioData, size));
+                    spdlog::debug("Sent {} bytes of audio binary data.", size);
+                    return true;
+                }
+                catch (std::exception &e)
+                {
+                    spdlog::error("Error sending audio binary data: {}", e.what());
+                }
+            }
+            return false;
+        }
+
+        bool sendTextJson(const std::string &jsonText) const
+        {
+            if (!_webSocket.is_open())
+            {
+                spdlog::warn("WebSocket is not open. Cannot send text data.");
+                return false;
+            }
+            if (_canSendData)
+            {
+                try
+                {
+                    _webSocket.text(true);
+                    _webSocket.write(net::buffer(jsonText));
+                    spdlog::debug("Sent JSON text data: {}", jsonText);
+                    return true;
+                }
+                catch (std::exception &e)
+                {
+                    spdlog::error("Error sending JSON text data: {}", e.what());
+                }
+            }
+            return false;
         }
 
     private:
@@ -227,21 +284,21 @@ namespace gladiapp::v2::ws
             {
                 std::pair<std::string, std::string> hostAndTarget = separateHostFromTarget(_endpoint);
                 tcp::resolver resolver{_ioContext};
-                spdlog::debug("Connecting to {}:{} ...", hostAndTarget.first, hostAndTarget.second);
-                auto const results = resolver.resolve(hostAndTarget.first, hostAndTarget.second);
+                spdlog::info("Connecting to {}:{} ...", hostAndTarget.first, hostAndTarget.second);
+                auto const results = resolver.resolve(hostAndTarget.first, "443");
                 net::connect(_webSocket.next_layer().lowest_layer(), results.begin(), results.end());
 
-                spdlog::debug("Performing SSL handshake...");
+                spdlog::info("Performing SSL handshake...");
                 _webSocket.next_layer().set_verify_callback(ssl::host_name_verification(hostAndTarget.first));
                 _webSocket.next_layer().handshake(ssl::stream_base::client);
 
                 _webSocket.handshake(hostAndTarget.first, hostAndTarget.second);
-                spdlog::debug("WebSocket connected successfully!");
-                return true;
+                spdlog::info("WebSocket connected successfully!");
             }
             catch (std::exception &e)
             {
                 spdlog::error("Error occurred: {}", e.what());
+                return false;
             }
             return true;
         }
@@ -276,9 +333,9 @@ namespace gladiapp::v2::ws
 
     private:
         std::string _endpoint;
-        boost::asio::io_context _ioContext;
+        net::io_context _ioContext;
         boost::beast::net::ssl::context _sslContext;
-        Websocket _webSocket;
+        mutable Websocket _webSocket;
         std::thread _dataReceptionThread;
         bool _keepReading;
         bool _canSendData;

@@ -227,7 +227,7 @@ namespace gladiapp
                                 BULLET_POINTS,
                                 CONCISE
                             };
-                            std::vector<Type> types;
+                            Type type;
 
                             nlohmann::json toJson() const;
                         };
@@ -250,7 +250,7 @@ namespace gladiapp
                         std::optional<bool> receive_pre_processing_events = true;
                         std::optional<bool> receive_realtime_processing_events = true;
                         std::optional<bool> receive_post_processing_events = true;
-                        std::optional<bool> receive_acknowledgements = true;
+                        std::optional<bool> receive_acknowledgments = true;
                         std::optional<bool> receive_errors = true;
                         std::optional<bool> receive_lifecycle_events = true;
 

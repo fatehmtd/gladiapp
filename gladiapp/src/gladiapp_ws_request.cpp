@@ -106,20 +106,16 @@ nlohmann::json gladiapp::v2::ws::request::InitializeSessionRequest::RealtimeProc
 nlohmann::json gladiapp::v2::ws::request::InitializeSessionRequest::PostProcessing::SummarizationConfig::toJson() const
 {
     nlohmann::json json;
-    for (const auto &type : types)
-    {
-        if (type == Type::GENERAL)
-        {
-            json["types"].push_back("general");
-        }
-        else if (type == Type::BULLET_POINTS)
-        {
-            json["types"].push_back("bullet_points");
-        }
-        else if (type == Type::CONCISE)
-        {
-            json["types"].push_back("concise");
-        }
+    switch(type) {
+    case Type::GENERAL:
+        json["type"] = "general";
+        break;
+    case Type::BULLET_POINTS:
+        json["type"] = "bullet_points";
+        break;
+    case Type::CONCISE:
+        json["type"] = "concise";
+        break;
     }
     return json;
 }
@@ -144,7 +140,7 @@ nlohmann::json gladiapp::v2::ws::request::InitializeSessionRequest::PostProcessi
     }
     if (summarization_config.has_value())
     {
-        json["summarization_config"] = summarization_config.value().toJson();
+        json["summarization_config"] = summarization_config->toJson();
     }
     if (chapterization.has_value())
     {
@@ -180,9 +176,9 @@ nlohmann::json gladiapp::v2::ws::request::InitializeSessionRequest::MessagesConf
     {
         json["receive_post_processing_events"] = receive_post_processing_events.value();
     }
-    if (receive_acknowledgements.has_value())
+    if (receive_acknowledgments.has_value())
     {
-        json["receive_acknowledgements"] = receive_acknowledgements.value();
+        json["receive_acknowledgments"] = receive_acknowledgments.value();
     }
     if (receive_errors.has_value())
     {
