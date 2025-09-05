@@ -40,14 +40,32 @@ int main(int ac, char **av)
     initRequest.region = request::InitializeSessionRequest::Region::US_WEST;
     initRequest.sample_rate = request::InitializeSessionRequest::SampleRate::SAMPLE_RATE_16000;
     initRequest.model = request::InitializeSessionRequest::Model::SOLARIA_1;
-    initRequest.endpointing = 1.5;
-    
-    initRequest.post_processing = request::InitializeSessionRequest::PostProcessing{};
-    initRequest.post_processing->summarization = true;
+    initRequest.endpointing = 0.15;
+    initRequest.maximum_duration_without_endpointing = 60;
+
+    // Realtime processing
+    request::InitializeSessionRequest::RealtimeProcessing realtimeProcessing;
+
+    // Translation
+    realtimeProcessing.translation = true;
+    request::InitializeSessionRequest::RealtimeProcessing::TranslationConfig translationConfig;
+    translationConfig.model = request::InitializeSessionRequest::RealtimeProcessing::TranslationConfig::Model::ENHANCED;
+    translationConfig.target_languages = {"fr", "es"};
+    translationConfig.lipsync = false;
+    translationConfig.informal = true;
+    realtimeProcessing.translation_config = translationConfig;
+    initRequest.realtime_processing = realtimeProcessing;
+    realtimeProcessing.named_entity_recognition = true;
+
+    // Post processing, Summarization
+    request::InitializeSessionRequest::PostProcessing postProcessing;
+    postProcessing.summarization = true;
     request::InitializeSessionRequest::PostProcessing::SummarizationConfig summarizationConfig;
     summarizationConfig.type = request::InitializeSessionRequest::PostProcessing::SummarizationConfig::Type::GENERAL;
-    initRequest.post_processing->summarization_config = summarizationConfig;
+    postProcessing.summarization_config = summarizationConfig;
+    initRequest.post_processing = postProcessing;
 
+    // Messages config
     request::InitializeSessionRequest::MessagesConfig messagesConfig;
     messagesConfig.receive_final_transcripts = true;
     messagesConfig.receive_speech_events = true;
@@ -65,20 +83,63 @@ int main(int ac, char **av)
     if (error.status_code != 0)
     {
         spdlog::error("Error occurred: {}", error.toString());
+        return -1;
     }
 
     if (session == nullptr)
     {
         spdlog::error("Failed to create WebSocket session.");
-        return 1;
+        return -1;
     }
 
     if (session->connectAndStart())
     {
         spdlog::info("WebSocket session started successfully.");
 
+        session->setOnConnectedCallback([]() {
+            spdlog::info("WebSocket connected callback triggered.");
+        });
+
+        session->setOnSpeechStartedCallback([](const response::SpeechEvent &event) {
+            spdlog::info("Callback - Speech Started Event: Session ID: {}, Time: {}, Channel: {}",
+                         event.session_id, event.data.time, event.data.channel);
+        });
+        session->setOnSpeechEndedCallback([](const response::SpeechEvent &event) {
+            spdlog::info("Callback - Speech Ended Event: Session ID: {}, Time: {}, Channel: {}",
+                         event.session_id, event.data.time, event.data.channel);
+        });
+        session->setOnTranscriptCallback([](const response::Transcript &transcript) {
+            spdlog::info("Callback - Transcript: Session ID: {}, Is Final: {}, Text: {}, Confidence: {}",
+                         transcript.session_id, transcript.data.is_final, transcript.data.utterance.text, transcript.data.utterance.confidence);
+        });
+        session->setOnTranslationCallback([](const response::Translation &translation) {
+            if (translation.data.has_value())
+            {
+                spdlog::info("Callback - Translation: Session ID: {}, Is Final: {}, Text: {}, Confidence: {}",
+                             translation.session_id, translation.data->utterance.text, translation.data->translated_utterance.text);
+            } else {
+                spdlog::error("Callback - Translation: Session ID: {}, message: {}.", translation.session_id, translation.error.has_value() ? translation.error->message : "Unknown error");
+            }
+        });
+        session->setOnNamedEntityRecognitionCallback([](const response::NamedEntityRecognition &ner) {
+            if (ner.data.has_value())
+            {
+                spdlog::info("Callback - Named Entity Recognition: Session ID: {}, Number of Results: {}",
+                             ner.session_id, ner.data->results.size());
+                for (const auto &result : ner.data->results)
+                {
+                    spdlog::info(" - Entity Type: {}, Text: {}, Start: {}, End: {}",
+                                 result.entity_type, result.text, result.start, result.end);
+                }
+            } else {
+                spdlog::error("Callback - Named Entity Recognition: Session ID: {}, message: {}.", ner.session_id, ner.error.has_value() ? ner.error->message : "Unknown error");
+            }
+        });
+
         // Send audio data in chunks
-        size_t chunkSize = 3200; // e.g., 100ms of audio
+        size_t chunkSize = 3200 * 5; // e.g., 100ms of audio
+        spdlog::info("Sending audio data in chunks of {} bytes...", chunkSize);
+        // Simulate real-time sending by adding a small delay between chunks
         for (size_t offset = 0; offset < audioData.size(); offset += chunkSize)
         {
             size_t currentChunkSize = std::min(chunkSize, audioData.size() - offset);
@@ -87,10 +148,12 @@ int main(int ac, char **av)
                 spdlog::error("Failed to send audio chunk.");
                 break;
             }
-            std::this_thread::sleep_for(std::chrono::milliseconds(50)); // simulate real-time sending
+            std::this_thread::sleep_for(std::chrono::milliseconds(100)); // simulate real-time sending
         }
+        session->sendStopSignal();
+        spdlog::info("Finished sending audio data. Waiting for processing to complete...");
 
-        std::this_thread::sleep_for(std::chrono::seconds(200));
+        std::this_thread::sleep_for(std::chrono::seconds(60)); // wait for processing
 
         session->sendStopSignal();
         session->disconnect();

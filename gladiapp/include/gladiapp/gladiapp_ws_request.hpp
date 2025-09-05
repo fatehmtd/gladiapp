@@ -133,79 +133,77 @@ namespace gladiapp
                             };
                             std::optional<std::vector<Vocabulary>> vocabulary;
                             std::optional<double> default_intensity = 0.5;
-
-                            bool custom_spelling = false;
-                            /**
-                             * Represents the configuration for custom spelling.
-                             */
-                            struct CustomSpellingConfig
-                            {
-                                /**
-                                 *  Mapping of words to their custom spellings.
-                                 *  ex: {"Night's Watch": ["Nights Watch", "Nightz Watch"]}
-                                 */
-                                std::unordered_map<std::string, std::vector<std::string>> spelling_dictionary;
-
-                                nlohmann::json toJson() const;
-                            };
-                            std::optional<CustomSpellingConfig> custom_spelling_config;
-
-                            bool translation = false;
-                            /**
-                             * Represents the configuration for audio translation.
-                             * Contains the model to be used and the target languages for translation.
-                             */
-                            struct TranslationConfig
-                            {
-                                enum Model
-                                {
-                                    BASE,
-                                    ENHANCED
-                                };
-                                Model model = Model::BASE;
-                                /**
-                                 * Represents the target languages for translation.
-                                 */
-                                std::vector<std::string> target_languages;
-                                /**
-                                 * Enables or disables matching original utterances.
-                                 */
-                                std::optional<bool> match_original_utterances = true;
-                                /**
-                                 * Enables or disables lip sync for translated audio.
-                                 */
-                                std::optional<bool> lipsync = true;
-                                /**
-                                 * Enables or disables context adaptation for translated audio.
-                                 */
-                                std::optional<bool> context_adaptation = false;
-                                /**
-                                 * Optional context to improve translation accuracy.
-                                 */
-                                std::optional<std::string> context;
-                                /**
-                                 * Enables or disables informal tone for translated audio.
-                                 */
-                                std::optional<bool> informal = false;
-
-                                nlohmann::json toJson() const;
-                            };
-                            TranslationConfig translation_config;
-
-                            /**
-                             * Enables or disables named entity recognition.
-                             */
-                            std::optional<bool> named_entity_recognition = false;
-
-                            /**
-                             * Enables or disables sentiment analysis.
-                             */
-                            std::optional<bool> sentiment_analysis = false;
-
                             nlohmann::json toJson() const;
                         };
                         std::optional<CustomVocabularyConfig> custom_vocabulary_config;
 
+                        bool custom_spelling = false;
+                        /**
+                         * Represents the configuration for custom spelling.
+                         */
+                        struct CustomSpellingConfig
+                        {
+                            /**
+                             *  Mapping of words to their custom spellings.
+                             *  ex: {"Night's Watch": ["Nights Watch", "Nightz Watch"]}
+                             */
+                            std::unordered_map<std::string, std::vector<std::string>> spelling_dictionary;
+
+                            nlohmann::json toJson() const;
+                        };
+                        std::optional<CustomSpellingConfig> custom_spelling_config;
+
+                        bool translation = false;
+                        /**
+                         * Represents the configuration for audio translation.
+                         * Contains the model to be used and the target languages for translation.
+                         */
+                        struct TranslationConfig
+                        {
+                            enum Model
+                            {
+                                BASE,
+                                ENHANCED
+                            };
+                            Model model = Model::BASE;
+                            /**
+                             * Represents the target languages for translation.
+                             */
+                            std::vector<std::string> target_languages;
+                            /**
+                             * Enables or disables matching original utterances.
+                             */
+                            std::optional<bool> match_original_utterances = true;
+                            /**
+                             * Enables or disables lip sync for translated audio.
+                             */
+                            std::optional<bool> lipsync = true;
+                            /**
+                             * Enables or disables context adaptation for translated audio.
+                             */
+                            std::optional<bool> context_adaptation = false;
+                            /**
+                             * Optional context to improve translation accuracy.
+                             */
+                            std::optional<std::string> context;
+                            /**
+                             * Enables or disables informal tone for translated audio.
+                             */
+                            std::optional<bool> informal = false;
+
+                            nlohmann::json toJson() const;
+                        };
+                        TranslationConfig translation_config;
+
+                        /**
+                         * Enables or disables named entity recognition.
+                         */
+                        std::optional<bool> named_entity_recognition = false;
+
+                        /**
+                         * Enables or disables sentiment analysis.
+                         */
+                        std::optional<bool> sentiment_analysis = false;
                         nlohmann::json toJson() const;
                     };
                     std::optional<RealtimeProcessing> realtime_processing;

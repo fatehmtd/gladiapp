@@ -90,8 +90,49 @@ namespace gladiapp
                 using OnTranslationCallback = std::function<void(const response::Translation &translation)>;
                 using OnNamedEntityRecognitionCallback = std::function<void(const response::NamedEntityRecognition &ner)>;
 
+                using OnSentimentAnalysisCallback = std::function<void(const response::SentimentAnalysis &analysis)>;
+                using OnSummarizationCallback = std::function<void(const response::Summarization &summarization)>;
+
+                /**
+                 * Acknowledgment callbacks
+                 */
+                using OnAudioChunkAcknowledgedCallback = std::function<void(const response::AudioChunkAcknowledgment &acknowledged)>;
+                using OnStopRecordingAcknowledgmentCallback = std::function<void(const response::StopRecordingAcknowledgment &event)>;
+
+                void setOnAudioChunkAcknowledgedCallback(const OnAudioChunkAcknowledgedCallback &callback);
+                void setOnStopRecordingCallback(const OnStopRecordingAcknowledgmentCallback &callback);
+
+                /**
+                 * Lifecycle event callbacks
+                 */
+                using OnStartSessionCallback = std::function<void(const response::StartSession &event)>;
+                using OnEndSessionCallback = std::function<void(const response::EndSession &event)>;
+                using OnStartRecordingCallback = std::function<void(const response::StartRecording &event)>;
+                using OnEndRecordingCallback = std::function<void(const response::EndRecording &event)>;
+
+                void setOnConnectedCallback(const OnConnectedCallback &callback);
+                void setOnSpeechStartedCallback(const OnSpeechEventCallback &callback);
+                void setOnSpeechEndedCallback(const OnSpeechEventCallback &callback);
+                void setOnTranscriptCallback(const OnTranscriptCallback &callback);
+                void setOnTranslationCallback(const OnTranslationCallback &callback);
+                void setOnNamedEntityRecognitionCallback(const OnNamedEntityRecognitionCallback &callback);
+
             private:
                 std::unique_ptr<GladiaWebsocketClientSessionImpl> _wsClientSessionImpl;
+                OnConnectedCallback _onConnectedCallback;
+                OnSpeechEventCallback _onSpeechStartedCallback;
+                OnSpeechEventCallback _onSpeechEndedCallback;
+                OnTranscriptCallback _onTranscriptCallback;
+                OnTranslationCallback _onTranslationCallback;
+                OnNamedEntityRecognitionCallback _onNamedEntityRecognitionCallback;
+                OnSentimentAnalysisCallback _onSentimentAnalysisCallback;
+                OnSummarizationCallback _onSummarizationCallback;
+                OnAudioChunkAcknowledgedCallback _onAudioChunkAcknowledgedCallback;
+                OnStopRecordingAcknowledgmentCallback _onStopRecordingAcknowledgmentCallback;
+                OnStartSessionCallback _onStartSessionCallback;
+                OnEndSessionCallback _onEndSessionCallback;
+                OnStartRecordingCallback _onStartRecordingCallback;
+                OnEndRecordingCallback _onEndRecordingCallback;
             };
         }
     }

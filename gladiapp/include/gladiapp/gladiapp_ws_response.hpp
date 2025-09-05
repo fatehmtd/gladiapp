@@ -118,7 +118,7 @@ namespace gladiapp
                         std::string target_language;
                         Utterance translated_utterance;
                     };
-                    Data data;
+                    std::optional<Data> data;
 
                     static Translation fromJson(const nlohmann::json &json);
                 };
@@ -146,7 +146,7 @@ namespace gladiapp
                         };
                         std::vector<Result> results;
                     };
-                    Data data;
+                    std::optional<Data> data;
 
                     static NamedEntityRecognition fromJson(const nlohmann::json &json);
                 };
@@ -188,6 +188,78 @@ namespace gladiapp
 
                     static PostTranscript fromJson(const nlohmann::json &json);
                 };
+
+                /**
+                 * Summarization event structure.
+                 */
+                struct GLADIAPP_EXPORT Summarization {
+                    std::string session_id;
+                    std::string created_at;
+                    std::string type;
+                    std::optional<Error> error;
+                    struct Data {
+                        std::string results;
+                    };
+                    std::optional<Data> data;
+                    static Summarization fromJson(const nlohmann::json &json);
+                };
+
+            
+                /**
+                 * Sentiment analysis event structure.
+                 */
+                struct GLADIAPP_EXPORT SentimentAnalysis {
+                    std::string session_id;
+                    std::string created_at;
+                    std::string type;
+                    struct Data {
+                        std::string utterance_id;
+                        Utterance utterance;
+                        struct Result {
+                            std::string sentiment;
+                            std::string emotion;
+                            std::string text;
+                            double start;
+                            double end;
+                            double channel;
+
+                            static Result fromJson(const nlohmann::json &json);
+                        };
+                        std::vector<Result> results;
+                    };
+                    Data data;
+
+                    static SentimentAnalysis fromJson(const nlohmann::json &json);
+                };
+
+                /**
+                 * Lifecycle event structure.
+                 */
+                struct GLADIAPP_EXPORT LifecycleEvent {
+                    std::string session_id;
+                    std::string created_at;
+                    std::string type;
+                    static LifecycleEvent fromJson(const nlohmann::json &json);
+                };
+
+                using StartSession = LifecycleEvent;
+                using EndSession = LifecycleEvent;
+                using StartRecording = LifecycleEvent;
+                using EndRecording = LifecycleEvent;
+
+                /**
+                 * Acknowledgment event structure.
+                 */
+                struct GLADIAPP_EXPORT Acknowledgment {
+                    std::string session_id;
+                    std::string created_at;
+                    std::string type;
+                    bool acknowledged;
+                    static Acknowledgment fromJson(const nlohmann::json &json);
+                };
+
+                using AudioChunkAcknowledgment = Acknowledgment;
+                using StopRecordingAcknowledgment = Acknowledgment;
             }
         }
     }

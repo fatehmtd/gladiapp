@@ -316,7 +316,7 @@ namespace gladiapp::v2::ws
                         size_t bytesRead = _webSocket.read(buffer, ec);
                         if (ec)
                         {
-                            spdlog::error("Error reading from WebSocket: {}", ec.message());
+                            spdlog::error("Error reading from WebSocket: {}, {}, {}", ec.message(), ec.value(), ec.category().name());
                             break;
                         }
                         std::string data(beast::buffers_to_string(buffer.data()));

@@ -26,14 +26,14 @@ nlohmann::json gladiapp::v2::ws::request::InitializeSessionRequest::RealtimeProc
     return json;
 }
 
-nlohmann::json gladiapp::v2::ws::request::InitializeSessionRequest::RealtimeProcessing::CustomVocabularyConfig::CustomSpellingConfig::toJson() const
+nlohmann::json gladiapp::v2::ws::request::InitializeSessionRequest::RealtimeProcessing::CustomSpellingConfig::toJson() const
 {
     nlohmann::json json;
     json["spelling_dictionary"] = spelling_dictionary;
     return json;
 }
 
-nlohmann::json gladiapp::v2::ws::request::InitializeSessionRequest::RealtimeProcessing::CustomVocabularyConfig::TranslationConfig::toJson() const
+nlohmann::json gladiapp::v2::ws::request::InitializeSessionRequest::RealtimeProcessing::TranslationConfig::toJson() const
 {
     nlohmann::json json;
     switch (model)
@@ -45,27 +45,23 @@ nlohmann::json gladiapp::v2::ws::request::InitializeSessionRequest::RealtimeProc
         json["model"] = "enhanced";
         break;
     }
-    json["target_languages"] = target_languages;
-    if (match_original_utterances.has_value())
+    for (const auto &lang : target_languages)
     {
-        json["match_original_utterances"] = match_original_utterances.value();
+        json["target_languages"].push_back(lang);
     }
-    if (lipsync.has_value())
-    {
-        json["lipsync"] = lipsync.value();
-    }
-    if (context_adaptation.has_value())
-    {
-        json["context_adaptation"] = context_adaptation.value();
-    }
+
+    json["match_original_utterances"] = match_original_utterances.has_value() ? match_original_utterances.value() : false;
+
+    json["lipsync"] = lipsync.has_value() ? lipsync.value() : false;
+
+    json["context_adaptation"] = context_adaptation.has_value() ? context_adaptation.value() : false;
+
     if (context.has_value())
     {
         json["context"] = context.value();
     }
-    if (informal.has_value())
-    {
-        json["informal"] = informal.value();
-    }
+    json["informal"] = informal.has_value() ? informal.value() : false;
+
     return json;
 }
 
@@ -85,28 +81,14 @@ nlohmann::json gladiapp::v2::ws::request::InitializeSessionRequest::RealtimeProc
     {
         json["default_intensity"] = default_intensity.value();
     }
-    json["custom_spelling"] = custom_spelling;
-    if (custom_spelling_config.has_value())
-    {
-        json["custom_spelling_config"] = custom_spelling_config.value().toJson();
-    }
-    json["translation"] = translation;
-    json["translation_config"] = translation_config.toJson();
-    if (named_entity_recognition.has_value())
-    {
-        json["named_entity_recognition"] = named_entity_recognition.value();
-    }
-    if (sentiment_analysis.has_value())
-    {
-        json["sentiment_analysis"] = sentiment_analysis.value();
-    }
     return json;
 }
 
 nlohmann::json gladiapp::v2::ws::request::InitializeSessionRequest::PostProcessing::SummarizationConfig::toJson() const
 {
     nlohmann::json json;
-    switch(type) {
+    switch (type)
+    {
     case Type::GENERAL:
         json["type"] = "general";
         break;
@@ -127,6 +109,21 @@ nlohmann::json gladiapp::v2::ws::request::InitializeSessionRequest::RealtimeProc
     if (custom_vocabulary_config.has_value())
     {
         json["custom_vocabulary_config"] = custom_vocabulary_config->toJson();
+    }
+    json["custom_spelling"] = custom_spelling;
+    if (custom_spelling_config.has_value())
+    {
+        json["custom_spelling_config"] = custom_spelling_config.value().toJson();
+    }
+    json["translation"] = translation;
+    json["translation_config"] = translation_config.toJson();
+    if (named_entity_recognition.has_value())
+    {
+        json["named_entity_recognition"] = named_entity_recognition.value();
+    }
+    if (sentiment_analysis.has_value())
+    {
+        json["sentiment_analysis"] = sentiment_analysis.value();
     }
     return json;
 }
