@@ -37,15 +37,6 @@ GladiaWebsocketClientSession *gladiapp::v2::ws::GladiaWebsocketClient::connect(c
  * GladiaWebsocketClientSession
  **************************************************************************************************************************************/
 
- namespace gladiapp::v2::ws::response::events {
-    constexpr const char* AUDIO_CHUNK_ACKNOWLEDGED = "audio_chunk_acknowledged";
-    constexpr const char* STOP_RECORDING_ACKNOWLEDGED = "stop_recording_acknowledged";
-    constexpr const char* START_SESSION = "start_session";
-    constexpr const char* END_SESSION = "end_session";
-    constexpr const char* START_RECORDING = "start_recording";
-    constexpr const char* END_RECORDING = "end_recording";
- };
-
 gladiapp::v2::ws::GladiaWebsocketClientSession::GladiaWebsocketClientSession(const std::string &url) : _wsClientSessionImpl(std::make_unique<GladiaWebsocketClientSessionImpl>(url))
 {
 }
@@ -71,27 +62,27 @@ bool gladiapp::v2::ws::GladiaWebsocketClientSession::connectAndStart()
                                                          std::string type = json["type"];
                                                          spdlog::info("Message type: {}", type);
 
-                                                         if(type == "speech_start" ) {
+                                                         if(type == events::SPEECH_START ) {
                                                             response::SpeechStarted event = response::SpeechStarted::fromJson(json);
                                                             if (_onSpeechStartedCallback)
                                                             {
                                                                 _onSpeechStartedCallback(event);
                                                             }
-                                                         } else if(type == "speech_end") {
+                                                         } else if(type == events::SPEECH_END) {
                                                             response::SpeechEnded event = response::SpeechEnded::fromJson(json);
                                                             if (_onSpeechEndedCallback)
                                                             {
                                                                 _onSpeechEndedCallback(event);
                                                             }
-                                                         } else if(type == "transcript") {
+                                                         } else if(type == events::TRANSCRIPT) {
                                                             response::Transcript transcript = response::Transcript::fromJson(json);
                                                             if (_onTranscriptCallback)
                                                             {
                                                                 _onTranscriptCallback(transcript);
                                                             }
-                                                         } else if(type == "audio_chunk") {
+                                                         } else if(type == events::AUDIO_CHUNK) {
                                                             bool isAck = json.value("acknowledged", false);
-                                                         } else if(type == "translation") {
+                                                         } else if(type == events::TRANSLATION) {
                                                             response::Translation translation = response::Translation::fromJson(json);
                                                             if (_onTranslationCallback)
                                                             {

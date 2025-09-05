@@ -18,6 +18,44 @@ namespace gladiapp
     {
         namespace ws
         {
+            /**
+             * Event type constants
+             */
+            namespace events
+            {
+                /**
+                 * acknowledgment types
+                 */
+                constexpr const char *AUDIO_CHUNK = "audio_chunk";
+                constexpr const char *STOP_RECORDING = "stop_recording";
+
+                /**
+                 * speech event types
+                 */
+                constexpr const char *SPEECH_START = "speech_start";
+                constexpr const char *SPEECH_END = "speech_end";
+                constexpr const char *TRANSCRIPT = "transcript";
+                constexpr const char *TRANSLATION = "translation";
+                constexpr const char *NAMED_ENTITY_RECOGNITION = "named_entity_recognition";
+                constexpr const char *SENTIMENT_ANALYSIS = "sentiment_analysis";
+
+                /**
+                 * Post-processing event types
+                 */
+                constexpr const char *POST_TRANSCRIPTION = "post_transcript";
+                constexpr const char *FINAL_TRANSCRIPTION = "final_transcript";
+                constexpr const char *CHAPTERIZATION = "chapterization";
+                constexpr const char *SUMMARIZATION = "summarization";
+
+                /**
+                 * lifecycle event types
+                 */
+                constexpr const char *START_SESSION = "start_session";
+                constexpr const char *END_SESSION = "end_session";
+                constexpr const char *START_RECORDING = "start_recording";
+                constexpr const char *END_RECORDING = "end_recording";
+            };
+
             // Forward declaration for the WebSocket client session
             class GladiaWebsocketClientSession;
 
