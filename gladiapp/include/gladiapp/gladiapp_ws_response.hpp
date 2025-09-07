@@ -48,9 +48,24 @@ namespace gladiapp
                  */
                 struct GLADIAPP_EXPORT Error
                 {
-                    std::string message;
+                    std::optional<int> status_code;
+                    std::optional<std::string> exception;
+                    std::optional<std::string> message;
 
                     static Error fromJson(const nlohmann::json &json);
+                };
+
+                /**
+                 * Represents a word in the utterance.
+                 */
+                struct Word
+                {
+                    std::string word;
+                    double start;
+                    double end;
+                    double confidence;
+
+                    static Word fromJson(const nlohmann::json &json);
                 };
 
                 /**
@@ -63,18 +78,6 @@ namespace gladiapp
                     double end;
                     double confidence;
                     int channel;
-                    /**
-                     * Represents a word in the utterance.
-                     */
-                    struct Word
-                    {
-                        std::string word;
-                        double start;
-                        double end;
-                        double confidence;
-
-                        static Word fromJson(const nlohmann::json &json);
-                    };
                     std::vector<Word> words;
                     std::string text;
                     std::optional<int> speaker;
@@ -152,36 +155,44 @@ namespace gladiapp
                 };
 
                 /**
+                 * Represents a sentence in the transcription.
+                 */
+                struct GLADIAPP_EXPORT Sentence
+                {
+                    bool success;
+                    bool is_empty;
+                    double exec_time;
+                    std::optional<Error> error;
+                    std::optional<std::vector<std::string>> results;
+
+                    static Sentence fromJson(const nlohmann::json &json);
+                };
+
+                /**
+                 * Represents subtitles in various formats.
+                 */
+                struct GLADIAPP_EXPORT Subtitle
+                {
+                    std::string format;
+                    std::string subtitles;
+                    static Subtitle fromJson(const nlohmann::json &json);
+                };
+
+                /**
                  * Represents a post-transcript event.
                  */
-                class GLADIAPP_EXPORT PostTranscript {
+                struct GLADIAPP_EXPORT PostTranscript
+                {
                     std::string session_id;
                     std::string created_at;
                     std::string type;
-                    struct Data {
+                    struct Data
+                    {
                         std::string full_transcript;
                         std::vector<std::string> languages;
                         std::vector<Utterance> utterances;
-                        struct Sentence {
-                            bool success;
-                            bool is_empty;
-                            double exec_time;
-                            struct Error {
-                                int status_code;
-                                std::string exception;
-                                std::string message;
-                            };
-                            std::optional<Error> error;
-
-                            static Sentence fromJson(const nlohmann::json &json);
-                        };
                         std::vector<Sentence> sentences;
                         std::optional<std::vector<std::string>> results;
-                        struct Subtitle {
-                            std::string format;
-                            std::string subtitles;
-                            static Subtitle fromJson(const nlohmann::json &json);
-                        };
                         std::optional<std::vector<Subtitle>> subtitles;
                     };
                     Data data;
@@ -190,32 +201,206 @@ namespace gladiapp
                 };
 
                 /**
+                 * Represents the final script event.
+                 */
+                struct GLADIAPP_EXPORT FinalScript
+                {
+                    std::string session_id;
+                    std::string created_at;
+                    std::string type;
+                    struct Data
+                    {
+                        struct Metadata
+                        {
+                            double audio_duration;
+                            int number_of_distinct_channels;
+                            double billing_time;
+                            double transcription_time;
+                            static Metadata fromJson(const nlohmann::json &json);
+                        };
+                        Metadata metadata;
+
+                        struct Transcription
+                        {
+                            std::string full_transcript;
+                            std::vector<std::string> languages;
+                            std::vector<Subtitle> subtitles;
+                            std::vector<Utterance> utterances;
+
+                            /**
+                             * generic format of various post-processing results
+                             */
+                            struct GenericResult
+                            {
+                                bool success;
+                                bool is_empty;
+                                double exec_time;
+                                std::optional<Error> error;
+                                std::optional<std::string> results;
+
+                                static GenericResult fromJson(const nlohmann::json &json);
+                            };
+
+                            using SummarizationResult = GenericResult;
+                            std::optional<SummarizationResult> summarization;
+
+                            using ModerationResult = GenericResult;
+                            std::optional<ModerationResult> moderation;
+
+                            struct NamedEntityRecognitionResult
+                            {
+                                bool success;
+                                bool is_empty;
+                                double exec_time;
+                                struct Error
+                                {
+                                    int status_code;
+                                    std::string exception;
+                                    std::string message;
+                                };
+                                std::optional<Error> error;
+                                std::optional<std::string> entity;
+
+                                static NamedEntityRecognitionResult fromJson(const nlohmann::json &json);
+                            };
+
+                            using NameConsistencyResult = GenericResult;
+                            std::optional<NameConsistencyResult> name_consistency;
+
+                            using CustomSpellingResult = GenericResult;
+                            std::optional<CustomSpellingResult> custom_spelling;
+
+                            using SpeakerReidentificationResult = GenericResult;
+                            std::optional<SpeakerReidentificationResult> speaker_reidentification;
+
+                            using StructuredDataExtractionResult = GenericResult;
+                            std::optional<StructuredDataExtractionResult> structured_data_extraction;
+
+                            using SentimentAnalysisResult = GenericResult;
+                            std::optional<SentimentAnalysisResult> sentiment_analysis;
+
+                            struct AudioToLLMResult
+                            {
+                                bool success;
+                                bool is_empty;
+                                double exec_time;
+
+                                std::optional<Error> error;
+
+                                struct Result
+                                {
+                                    bool success;
+                                    bool is_empty;
+                                    double exec_time;
+                                    std::optional<Error> error;
+
+                                    struct ResultPair
+                                    {
+                                        std::optional<std::string> prompt;
+                                        std::optional<std::string> response;
+                                    };
+                                    std::optional<std::vector<ResultPair>> results;
+
+                                    static Result fromJson(const nlohmann::json &json);
+                                };
+                                std::optional<std::vector<Result>> results;
+
+                                static AudioToLLMResult fromJson(const nlohmann::json &json);
+                            };
+
+                            struct DisplayMode
+                            {
+                                bool success;
+                                bool is_empty;
+                                double exec_time;
+                                std::optional<Error> error;
+                                std::optional<std::vector<std::string>> results;
+
+                                static DisplayMode fromJson(const nlohmann::json &json);
+                            };
+                            std::optional<DisplayMode> display_mode;
+
+                            struct ChapterizationResult
+                            {
+                                bool success;
+                                bool is_empty;
+                                double exec_time;
+                                std::optional<Error> error;
+
+                                // undefined format of the results, missing info from the api reference.
+                                std::optional<std::string> results;
+
+                                static ChapterizationResult fromJson(const nlohmann::json &json);
+                            };
+                            std::optional<ChapterizationResult> chapters;
+
+                            struct DiarizationResult
+                            {
+                                bool success;
+                                bool is_empty;
+                                double exec_time;
+                                std::optional<Error> error;
+
+                                struct Result
+                                {
+                                    double start;
+                                    double end;
+                                    double confidence;
+                                    int channel;
+                                    std::optional<int> speaker;
+                                    std::vector<Word> words;
+                                    std::string text;
+                                    std::string language;
+
+                                    static Result fromJson(const nlohmann::json &json);
+                                };
+                                std::optional<std::vector<Result>> results;
+
+                                static DiarizationResult fromJson(const nlohmann::json &json);
+                            };
+                            using DiarizationEnhancedResult = DiarizationResult;
+                            std::optional<DiarizationEnhancedResult> diarization_enhanced;
+                            std::optional<DiarizationResult> diarization;
+
+                            static Transcription fromJson(const nlohmann::json &json);
+                        };
+                        std::optional<Transcription> transcription;
+                        std::optional<Translation> translation;
+                    };
+                    Data data;
+                };
+
+                /**
                  * Summarization event structure.
                  */
-                struct GLADIAPP_EXPORT Summarization {
+                struct GLADIAPP_EXPORT Summarization
+                {
                     std::string session_id;
                     std::string created_at;
                     std::string type;
                     std::optional<Error> error;
-                    struct Data {
+                    struct Data
+                    {
                         std::string results;
                     };
                     std::optional<Data> data;
                     static Summarization fromJson(const nlohmann::json &json);
                 };
 
-            
                 /**
                  * Sentiment analysis event structure.
                  */
-                struct GLADIAPP_EXPORT SentimentAnalysis {
+                struct GLADIAPP_EXPORT SentimentAnalysis
+                {
                     std::string session_id;
                     std::string created_at;
                     std::string type;
-                    struct Data {
+                    struct Data
+                    {
                         std::string utterance_id;
                         Utterance utterance;
-                        struct Result {
+                        struct Result
+                        {
                             std::string sentiment;
                             std::string emotion;
                             std::string text;
@@ -235,7 +420,8 @@ namespace gladiapp
                 /**
                  * Lifecycle event structure.
                  */
-                struct GLADIAPP_EXPORT LifecycleEvent {
+                struct GLADIAPP_EXPORT LifecycleEvent
+                {
                     std::string session_id;
                     std::string created_at;
                     std::string type;
@@ -250,7 +436,8 @@ namespace gladiapp
                 /**
                  * Acknowledgment event structure.
                  */
-                struct GLADIAPP_EXPORT Acknowledgment {
+                struct GLADIAPP_EXPORT Acknowledgment
+                {
                     std::string session_id;
                     std::string created_at;
                     std::string type;

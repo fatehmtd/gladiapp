@@ -122,12 +122,23 @@ namespace gladiapp
                  */
                 bool sendAudioJson(const uint8_t *audioData, int size) const;
 
-                using OnConnectedCallback = std::function<void(void)>;
+                /**
+                 * Connectivity callbacks
+                 */
+                using OnConnectivityCallback = std::function<void(void)>;
+                using OnErrorCallback = std::function<void(const std::string &errorMessage)>;
+
+                void setOnConnectedCallback(const OnConnectivityCallback &callback);
+                void setOnDisconnectedCallback(const OnConnectivityCallback &callback);
+                void setOnErrorCallback(const OnErrorCallback &callback);
+
+                /**
+                 * Speech event callbacks
+                 */
                 using OnSpeechEventCallback = std::function<void(const response::SpeechEvent &event)>;
                 using OnTranscriptCallback = std::function<void(const response::Transcript &transcript)>;
                 using OnTranslationCallback = std::function<void(const response::Translation &translation)>;
                 using OnNamedEntityRecognitionCallback = std::function<void(const response::NamedEntityRecognition &ner)>;
-
                 using OnSentimentAnalysisCallback = std::function<void(const response::SentimentAnalysis &analysis)>;
                 using OnSummarizationCallback = std::function<void(const response::Summarization &summarization)>;
 
@@ -148,7 +159,6 @@ namespace gladiapp
                 using OnStartRecordingCallback = std::function<void(const response::StartRecording &event)>;
                 using OnEndRecordingCallback = std::function<void(const response::EndRecording &event)>;
 
-                void setOnConnectedCallback(const OnConnectedCallback &callback);
                 void setOnSpeechStartedCallback(const OnSpeechEventCallback &callback);
                 void setOnSpeechEndedCallback(const OnSpeechEventCallback &callback);
                 void setOnTranscriptCallback(const OnTranscriptCallback &callback);
@@ -157,16 +167,37 @@ namespace gladiapp
 
             private:
                 std::unique_ptr<GladiaWebsocketClientSessionImpl> _wsClientSessionImpl;
-                OnConnectedCallback _onConnectedCallback;
+                /**
+                 * Callback functions
+                 */
+                OnConnectivityCallback _onConnectedCallback;
+                OnConnectivityCallback _onDisconnectedCallback;
+                OnErrorCallback _onErrorCallback;
+
+                /**
+                 * Speech event callbacks
+                 */
                 OnSpeechEventCallback _onSpeechStartedCallback;
                 OnSpeechEventCallback _onSpeechEndedCallback;
                 OnTranscriptCallback _onTranscriptCallback;
                 OnTranslationCallback _onTranslationCallback;
                 OnNamedEntityRecognitionCallback _onNamedEntityRecognitionCallback;
                 OnSentimentAnalysisCallback _onSentimentAnalysisCallback;
+
+                /**
+                 * Post-processing event callbacks
+                 */
                 OnSummarizationCallback _onSummarizationCallback;
+
+                /**
+                 * Acknowledgment callbacks
+                 */
                 OnAudioChunkAcknowledgedCallback _onAudioChunkAcknowledgedCallback;
                 OnStopRecordingAcknowledgmentCallback _onStopRecordingAcknowledgmentCallback;
+
+                /**
+                 * Lifecycle event callbacks
+                 */
                 OnStartSessionCallback _onStartSessionCallback;
                 OnEndSessionCallback _onEndSessionCallback;
                 OnStartRecordingCallback _onStartRecordingCallback;

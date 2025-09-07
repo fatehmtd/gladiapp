@@ -150,7 +150,7 @@ void gladiapp::v2::ws::GladiaWebsocketClientSession::setOnStopRecordingCallback(
     _onStopRecordingAcknowledgmentCallback = callback;
 }
 
-void gladiapp::v2::ws::GladiaWebsocketClientSession::setOnConnectedCallback(const OnConnectedCallback &callback)
+void gladiapp::v2::ws::GladiaWebsocketClientSession::setOnConnectedCallback(const OnConnectivityCallback &callback)
 {
     _onConnectedCallback = callback;
 }

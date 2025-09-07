@@ -118,7 +118,7 @@ int main(int ac, char **av)
                 spdlog::info("Callback - Translation: Session ID: {}, Is Final: {}, Text: {}, Confidence: {}",
                              translation.session_id, translation.data->utterance.text, translation.data->translated_utterance.text);
             } else {
-                spdlog::error("Callback - Translation: Session ID: {}, message: {}.", translation.session_id, translation.error.has_value() ? translation.error->message : "Unknown error");
+                spdlog::error("Callback - Translation: Session ID: {}, message: {}.", translation.session_id, translation.error.has_value() ? translation.error->message.value() : "Unknown error");
             }
         });
         session->setOnNamedEntityRecognitionCallback([](const response::NamedEntityRecognition &ner) {
@@ -132,7 +132,7 @@ int main(int ac, char **av)
                                  result.entity_type, result.text, result.start, result.end);
                 }
             } else {
-                spdlog::error("Callback - Named Entity Recognition: Session ID: {}, message: {}.", ner.session_id, ner.error.has_value() ? ner.error->message : "Unknown error");
+                spdlog::error("Callback - Named Entity Recognition: Session ID: {}, message: {}.", ner.session_id, ner.error.has_value() ? ner.error->message.value() : "Unknown error");
             }
         });
 

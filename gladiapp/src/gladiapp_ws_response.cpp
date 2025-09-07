@@ -24,11 +24,22 @@ SpeechEvent gladiapp::v2::ws::response::SpeechEvent::fromJson(const nlohmann::js
 Error gladiapp::v2::ws::response::Error::fromJson(const nlohmann::json &json)
 {
     Error error;
-    error.message = json.at("message").get<std::string>();
+    if (json.contains("status_code"))
+    {
+        error.status_code = json.at("status_code").get<int>();
+    }
+    if (json.contains("exception"))
+    {
+        error.exception = json.at("exception").get<std::string>();
+    }
+    if (json.contains("message"))
+    {
+        error.message = json.at("message").get<std::string>();
+    }
     return error;
 }
 
-Utterance::Word gladiapp::v2::ws::response::Utterance::Word::fromJson(const nlohmann::json &json)
+gladiapp::v2::ws::response::Word gladiapp::v2::ws::response::Word::fromJson(const nlohmann::json &json)
 {
     Word word;
     word.word = json.at("word").get<std::string>();
@@ -48,7 +59,7 @@ Utterance gladiapp::v2::ws::response::Utterance::fromJson(const nlohmann::json &
     utterance.channel = json.at("channel").get<int>();
     for (const auto &wordJson : json.at("words"))
     {
-        utterance.words.push_back(Utterance::Word::fromJson(wordJson));
+        utterance.words.push_back(Word::fromJson(wordJson));
     }
     utterance.text = json.at("text").get<std::string>();
     if (json.contains("speaker"))
@@ -127,7 +138,8 @@ NamedEntityRecognition gladiapp::v2::ws::response::NamedEntityRecognition::fromJ
     return recognition;
 }
 
-gladiapp::v2::ws::response::SentimentAnalysis::Data::Result gladiapp::v2::ws::response::SentimentAnalysis::Data::Result::fromJson(const nlohmann::json &json) {
+gladiapp::v2::ws::response::SentimentAnalysis::Data::Result gladiapp::v2::ws::response::SentimentAnalysis::Data::Result::fromJson(const nlohmann::json &json)
+{
     Result result;
     result.sentiment = json.at("sentiment").get<std::string>();
     result.emotion = json.at("emotion").get<std::string>();
