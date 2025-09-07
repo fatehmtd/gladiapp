@@ -202,6 +202,9 @@ namespace gladiapp
                 OnEndSessionCallback _onEndSessionCallback;
                 OnStartRecordingCallback _onStartRecordingCallback;
                 OnEndRecordingCallback _onEndRecordingCallback;
+
+                // Process incoming WebSocket messages
+                void processDataMessage(const std::string &message) const;
             };
         }
     }

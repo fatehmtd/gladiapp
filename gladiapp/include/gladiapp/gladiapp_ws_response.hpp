@@ -58,7 +58,7 @@ namespace gladiapp
                 /**
                  * Represents a word in the utterance.
                  */
-                struct Word
+                struct GLADIAPP_EXPORT Word
                 {
                     std::string word;
                     double start;
@@ -88,7 +88,7 @@ namespace gladiapp
                 /**
                  * Represents a transcript event.
                  */
-                struct GLADIAPP_EXPORT Transcript
+                struct GLADIAPP_EXPORT Trans cript
                 {
                     std::string session_id;
                     std::string created_at;
@@ -247,17 +247,15 @@ namespace gladiapp
                             using ModerationResult = GenericResult;
                             std::optional<ModerationResult> moderation;
 
+                            /**
+                             * Named entity recognition result structure.
+                             */
                             struct NamedEntityRecognitionResult
                             {
                                 bool success;
                                 bool is_empty;
                                 double exec_time;
-                                struct Error
-                                {
-                                    int status_code;
-                                    std::string exception;
-                                    std::string message;
-                                };
+
                                 std::optional<Error> error;
                                 std::optional<std::string> entity;
 
@@ -279,6 +277,9 @@ namespace gladiapp
                             using SentimentAnalysisResult = GenericResult;
                             std::optional<SentimentAnalysisResult> sentiment_analysis;
 
+                            /**
+                             * Audio to LLM result structure.
+                             */
                             struct AudioToLLMResult
                             {
                                 bool success;
@@ -308,6 +309,11 @@ namespace gladiapp
                                 static AudioToLLMResult fromJson(const nlohmann::json &json);
                             };
 
+                            std::optional<AudioToLLMResult> audio_to_llm;
+
+                            /**
+                             * Display mode result structure.
+                             */
                             struct DisplayMode
                             {
                                 bool success;
@@ -320,6 +326,9 @@ namespace gladiapp
                             };
                             std::optional<DisplayMode> display_mode;
 
+                            /**
+                             * Chapterization result structure.
+                             */
                             struct ChapterizationResult
                             {
                                 bool success;
@@ -334,6 +343,9 @@ namespace gladiapp
                             };
                             std::optional<ChapterizationResult> chapters;
 
+                            /**
+                             * Diarization result structure.
+                             */
                             struct DiarizationResult
                             {
                                 bool success;

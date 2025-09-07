@@ -53,43 +53,168 @@ bool gladiapp::v2::ws::GladiaWebsocketClientSession::connectAndStart()
     {
         spdlog::warn("WebSocket is already connected.");
         return true;
-    } 
+    }
     return _wsClientSessionImpl->connectAndStart([this](const std::string &message)
-                                                 {
-                                                     nlohmann::json json = nlohmann::json::parse(message);
-                                                     if (json.contains("type"))
-                                                     {
-                                                         std::string type = json["type"];
-                                                         spdlog::info("Message type: {}", type);
+                                                 { this->processDataMessage(message); });
+}
 
-                                                         if(type == events::SPEECH_START ) {
-                                                            response::SpeechStarted event = response::SpeechStarted::fromJson(json);
-                                                            if (_onSpeechStartedCallback)
-                                                            {
-                                                                _onSpeechStartedCallback(event);
-                                                            }
-                                                         } else if(type == events::SPEECH_END) {
-                                                            response::SpeechEnded event = response::SpeechEnded::fromJson(json);
-                                                            if (_onSpeechEndedCallback)
-                                                            {
-                                                                _onSpeechEndedCallback(event);
-                                                            }
-                                                         } else if(type == events::TRANSCRIPT) {
-                                                            response::Transcript transcript = response::Transcript::fromJson(json);
-                                                            if (_onTranscriptCallback)
-                                                            {
-                                                                _onTranscriptCallback(transcript);
-                                                            }
-                                                         } else if(type == events::AUDIO_CHUNK) {
-                                                            bool isAck = json.value("acknowledged", false);
-                                                         } else if(type == events::TRANSLATION) {
-                                                            response::Translation translation = response::Translation::fromJson(json);
-                                                            if (_onTranslationCallback)
-                                                            {
-                                                                _onTranslationCallback(translation);
-                                                            }
-                                                         }
-                                                     } });
+void gladiapp::v2::ws::GladiaWebsocketClientSession::processDataMessage(const std::string &message) const
+{
+    try
+    {
+        nlohmann::json json = nlohmann::json::parse(message);
+        if (json.contains("type"))
+        {
+            std::string type = json["type"];
+            spdlog::info("Message type: {}", type);
+
+            // Acknowledgment events
+            if (type == events::AUDIO_CHUNK)
+            {
+                response::AudioChunkAcknowledgment ack = response::AudioChunkAcknowledgment::fromJson(json);
+                if (_onAudioChunkAcknowledgedCallback)
+                {
+                    _onAudioChunkAcknowledgedCallback(ack);
+                }
+            }
+            else if (type == events::STOP_RECORDING)
+            {
+                response::StopRecordingAcknowledgment ack = response::StopRecordingAcknowledgment::fromJson(json);
+                if (_onStopRecordingAcknowledgmentCallback)
+                {
+                    _onStopRecordingAcknowledgmentCallback(ack);
+                }
+            }
+            // Speech event types
+            else if (type == events::SPEECH_START)
+            {
+                response::SpeechStarted event = response::SpeechStarted::fromJson(json);
+                if (_onSpeechStartedCallback)
+                {
+                    _onSpeechStartedCallback(event);
+                }
+            }
+            else if (type == events::SPEECH_END)
+            {
+                response::SpeechEnded event = response::SpeechEnded::fromJson(json);
+                if (_onSpeechEndedCallback)
+                {
+                    _onSpeechEndedCallback(event);
+                }
+            }
+            else if (type == events::TRANSCRIPT)
+            {
+                response::Transcript transcript = response::Transcript::fromJson(json);
+                if (_onTranscriptCallback)
+                {
+                    _onTranscriptCallback(transcript);
+                }
+            }
+            else if (type == events::TRANSLATION)
+            {
+                response::Translation translation = response::Translation::fromJson(json);
+                if (_onTranslationCallback)
+                {
+                    _onTranslationCallback(translation);
+                }
+            }
+            else if (type == events::NAMED_ENTITY_RECOGNITION)
+            {
+                response::NamedEntityRecognition ner = response::NamedEntityRecognition::fromJson(json);
+                if (_onNamedEntityRecognitionCallback)
+                {
+                    _onNamedEntityRecognitionCallback(ner);
+                }
+            }
+            else if (type == events::SENTIMENT_ANALYSIS)
+            {
+                response::SentimentAnalysis analysis = response::SentimentAnalysis::fromJson(json);
+                if (_onSentimentAnalysisCallback)
+                {
+                    _onSentimentAnalysisCallback(analysis);
+                }
+            }
+            // Post-processing event types
+            else if (type == events::POST_TRANSCRIPTION)
+            {
+                response::Transcript transcript = response::Transcript::fromJson(json);
+                if (_onTranscriptCallback)
+                {
+                    _onTranscriptCallback(transcript);
+                }
+            }
+            else if (type == events::FINAL_TRANSCRIPTION)
+            {
+                response::Transcript transcript = response::Transcript::fromJson(json);
+                if (_onTranscriptCallback)
+                {
+                    _onTranscriptCallback(transcript);
+                }
+            }
+            else if (type == events::CHAPTERIZATION)
+            {
+                // Note: No callback defined in header for chapterization
+                spdlog::info("Chapterization event received but no callback defined");
+            }
+            else if (type == events::SUMMARIZATION)
+            {
+                response::Summarization summarization = response::Summarization::fromJson(json);
+                if (_onSummarizationCallback)
+                {
+                    _onSummarizationCallback(summarization);
+                }
+            }
+            // Lifecycle event types
+            else if (type == events::START_SESSION)
+            {
+                response::StartSession event = response::StartSession::fromJson(json);
+                if (_onStartSessionCallback)
+                {
+                    _onStartSessionCallback(event);
+                }
+            }
+            else if (type == events::END_SESSION)
+            {
+                response::EndSession event = response::EndSession::fromJson(json);
+                if (_onEndSessionCallback)
+                {
+                    _onEndSessionCallback(event);
+                }
+            }
+            else if (type == events::START_RECORDING)
+            {
+                response::StartRecording event = response::StartRecording::fromJson(json);
+                if (_onStartRecordingCallback)
+                {
+                    _onStartRecordingCallback(event);
+                }
+            }
+            else if (type == events::END_RECORDING)
+            {
+                response::EndRecording event = response::EndRecording::fromJson(json);
+                if (_onEndRecordingCallback)
+                {
+                    _onEndRecordingCallback(event);
+                }
+            }
+            else
+            {
+                spdlog::warn("Unknown event type received: {}", type);
+            }
+        }
+        else
+        {
+            spdlog::warn("Received message without 'type' field: {}", message);
+        }
+    }
+    catch (const nlohmann::json::exception &e)
+    {
+        spdlog::error("Failed to parse JSON message: {}. Error: {}", message, e.what());
+    }
+    catch (const std::exception &e)
+    {
+        spdlog::error("Error processing message: {}. Error: {}", message, e.what());
+    }
 }
 
 bool gladiapp::v2::ws::GladiaWebsocketClientSession::sendStopSignal()
