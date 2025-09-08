@@ -1,4 +1,4 @@
-#include "gladiapp/gladiapp_rest.hpp"
+#include "gladiapp/gladiapp_rest_request.hpp"
 #include <algorithm>
 #include <unordered_map>
 
@@ -9,7 +9,7 @@ namespace gladiapp
         namespace request
         {
             // DiarizationConfig implementations
-            nlohmann::json DiarizationConfig::toJson() const
+            nlohmann::json TranscriptionRequest::DiarizationConfig::toJson() const
             {
                 nlohmann::json j;
                 j["number_of_speakers"] = number_of_speakers;
@@ -23,7 +23,7 @@ namespace gladiapp
             }
 
             // TranslationConfig implementations
-            nlohmann::json TranslationConfig::toJson() const
+            nlohmann::json TranscriptionRequest::TranslationConfig::toJson() const
             {
                 nlohmann::json j;
                 j["model"] = model == Model::BASE ? "base" : "enhanced";
@@ -52,7 +52,7 @@ namespace gladiapp
             }
 
             // SubtitlesConfig implementations
-            std::string SubtitlesConfig::toString() const
+            std::string TranscriptionRequest::SubtitlesConfig::toString() const
             {
                 nlohmann::json j;
                 std::vector<std::string> formats;
@@ -80,7 +80,7 @@ namespace gladiapp
             }
 
             // CallbackConfig implementations
-            std::string CallbackConfig::toJson() const
+            std::string TranscriptionRequest::CallbackConfig::toJson() const
             {
                 nlohmann::json j;
                 j["url"] = url;
@@ -89,7 +89,7 @@ namespace gladiapp
             }
 
             // SummarizationConfig implementations
-            std::string SummarizationConfig::toJson() const
+            std::string TranscriptionRequest::SummarizationConfig::toJson() const
             {
                 nlohmann::json j;
                 std::vector<std::string> typeStrings;
@@ -113,7 +113,7 @@ namespace gladiapp
             }
 
             // CustomSpellingConfig implementations
-            nlohmann::json CustomSpellingConfig::toJson() const
+            nlohmann::json TranscriptionRequest::CustomSpellingConfig::toJson() const
             {
                 nlohmann::json j;
                 j["spelling_dictionary"] = spelling_dictionary;
@@ -121,7 +121,7 @@ namespace gladiapp
             }
 
             // StructuredDataExtractionConfig implementations
-            nlohmann::json StructuredDataExtractionConfig::toJson() const
+            nlohmann::json TranscriptionRequest::StructuredDataExtractionConfig::toJson() const
             {
                 nlohmann::json j;
                 j["structured_data_extraction_config"] = classes;
@@ -129,7 +129,7 @@ namespace gladiapp
             }
 
             // AudioToLLMConfig implementations
-            nlohmann::json AudioToLLMConfig::toJson() const
+            nlohmann::json TranscriptionRequest::AudioToLLMConfig::toJson() const
             {
                 nlohmann::json j;
                 j["prompts"] = prompts;
@@ -137,7 +137,7 @@ namespace gladiapp
             }
 
             // LanguageConfig implementations
-            nlohmann::json LanguageConfig::toJson() const
+            nlohmann::json TranscriptionRequest::LanguageConfig::toJson() const
             {
                 nlohmann::json j;
                 j["languages"] = languages;

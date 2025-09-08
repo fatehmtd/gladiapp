@@ -16,3 +16,4 @@ add_subdirectory(gladiapp)
 
 # the examples
 add_subdirectory(examples/example-rest)
+add_subdirectory(examples/example-ws)

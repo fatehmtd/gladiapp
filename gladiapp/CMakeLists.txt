@@ -10,7 +10,9 @@ include(FetchContent)
 include(GNUInstallDirs)
 
 # Modern CMake: Use Boost's imported targets and avoid FindBoost
-find_package(Boost REQUIRED COMPONENTS system thread CONFIG)
+find_package(boost_system REQUIRED CONFIG)
+find_package(boost_thread REQUIRED CONFIG)
+find_package(boost_beast REQUIRED CONFIG)
 find_package(OpenSSL REQUIRED)
 
 # Debug: Print Boost information
@@ -39,13 +41,28 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(nlohmann_json)
 
+# fetch base64
+set(BASE64_ENABLE_TESTING OFF CACHE BOOL "Disable base64 testing" FORCE)
+FetchContent_Declare(
+    base64
+    GIT_REPOSITORY https://github.com/tobiaslocker/base64.git
+)
+FetchContent_MakeAvailable(base64)
+
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${OPENSSL_INCLUDE_DIR})
 
 add_library(gladiapp STATIC
+    # error
+    src/gladiapp_error.cpp
+    # rest
     src/gladiapp_rest.cpp
     src/gladiapp_rest_request.cpp
     src/gladiapp_rest_response.cpp
+    # websockets
+    src/gladiapp_ws.cpp
+    src/gladiapp_ws_request.cpp
+    src/gladiapp_ws_response.cpp
 )
 
 target_include_directories(gladiapp PRIVATE include)
@@ -57,6 +74,7 @@ target_link_libraries(gladiapp
     Boost::system
     Boost::thread
     ${OPENSSL_LIBRARIES}
+    base64
 )
 
 # Generate export header

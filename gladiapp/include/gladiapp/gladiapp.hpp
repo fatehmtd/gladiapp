@@ -13,6 +13,7 @@ namespace gladiapp {
             constexpr const char* HOST = "api.gladia.io";
             constexpr const char* PRERECORDED_ENDPOINT = "/v2/pre-recorded";
             constexpr const char* UPLOAD_ENDPOINT = "/v2/upload";
+            constexpr const char* LIVE_ENDPOINT = "/v2/live";
         }
     }
 }
