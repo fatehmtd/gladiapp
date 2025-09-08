@@ -146,13 +146,16 @@ namespace gladiapp::v2::ws
             disconnect();
         }
 
-        bool connectAndStart(const std::function<void(const std::string &)> &dataReadCallback)
+        bool connectAndStart(const std::function<void(const std::string &)> &dataReadCallback,
+                         const std::function<void()> &onConnectedCallback = nullptr,
+                         const std::function<void(const std::string &message)> &onDisconnectedCallback = nullptr,
+                         const std::function<void(const std::string &errorMessage)> &onErrorCallback = nullptr)
         {
             if (!connect())
             {
                 return false;
             }
-            if (!startThread(dataReadCallback))
+            if (!startThread(dataReadCallback, onConnectedCallback, onDisconnectedCallback, onErrorCallback))
             {
                 disconnect();
                 return false;
@@ -303,21 +306,54 @@ namespace gladiapp::v2::ws
             return true;
         }
 
-        bool startThread(const std::function<void(const std::string &)> &dataReadCallback)
+        bool startThread(const std::function<void(const std::string &)> &dataReadCallback,
+                         const std::function<void()> &onConnectedCallback = nullptr,
+                         const std::function<void(const std::string &message)> &onDisconnectedCallback = nullptr,
+                         const std::function<void(const std::string &errorMessage)> &onErrorCallback = nullptr)
         {
-            _dataReceptionThread = std::thread([this, dataReadCallback]()
+            _dataReceptionThread = std::thread([this, dataReadCallback, onConnectedCallback, onDisconnectedCallback, onErrorCallback]()
                                                {
                 try
                 {
                     beast::flat_buffer buffer;
                     beast::error_code ec;
+                    bool isConnected = false;
                     while (_webSocket.is_open() && _keepReading)
                     {                        
                         size_t bytesRead = _webSocket.read(buffer, ec);
                         if (ec)
                         {
-                            spdlog::error("Error reading from WebSocket: {}, {}, {}", ec.message(), ec.value(), ec.category().name());
+                            // Check if it's a normal WebSocket closure
+                            if (ec == beast::websocket::error::closed || 
+                                ec == net::error::eof ||
+                                ec == net::ssl::error::stream_truncated)
+                            {
+                                spdlog::warn("WebSocket closed by server: {}", ec.message());
+                                if(onDisconnectedCallback)
+                                {
+                                    onDisconnectedCallback(ec.message());
+                                }                                
+                            }
+                            else
+                            {
+                                spdlog::error("Error reading from WebSocket: {}, {}, {}", ec.message(), ec.value(), ec.category().name());
+                                if (onErrorCallback)
+                                {
+                                    onErrorCallback(ec.message());
+                                }
+                                if(onDisconnectedCallback)
+                                {
+                                    onDisconnectedCallback(ec.message());
+                                }
+                            }
                             break;
+                        } else {
+                            if(!isConnected) {
+                                isConnected = true;
+                                if(onConnectedCallback) {
+                                    onConnectedCallback();
+                                }
+                            }
                         }
                         std::string data(beast::buffers_to_string(buffer.data()));
                         buffer.consume(bytesRead);

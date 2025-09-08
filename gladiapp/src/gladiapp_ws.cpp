@@ -55,7 +55,28 @@ bool gladiapp::v2::ws::GladiaWebsocketClientSession::connectAndStart()
         return true;
     }
     return _wsClientSessionImpl->connectAndStart([this](const std::string &message)
-                                                 { this->processDataMessage(message); });
+                                                 { this->processDataMessage(message); },
+                                                 [this]()
+                                                 {
+                                                     if (this->_onConnectedCallback)
+                                                     {
+                                                         this->_onConnectedCallback();
+                                                     }
+                                                 },
+                                                 [this](const std::string &message)
+                                                 {
+                                                     if (this->_onDisconnectedCallback)
+                                                     {
+                                                         this->_onDisconnectedCallback();
+                                                     }
+                                                 },
+                                                 [this](const std::string &errorMessage)
+                                                 {
+                                                     if (this->_onErrorCallback)
+                                                     {
+                                                         this->_onErrorCallback(errorMessage);
+                                                     }
+                                                 });
 }
 
 void gladiapp::v2::ws::GladiaWebsocketClientSession::processDataMessage(const std::string &message) const
