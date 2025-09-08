@@ -1,6 +1,6 @@
 # GladiaPP - C++ Client Library for Gladia API
 
-A modern C++ client library for interacting with the Gladia audio transcription API. This library provides a simple and efficient way to upload audio files, create transcription jobs, and retrieve results using the Gladia v2 API.
+A modern C++ client library for interacting with the Gladia audio transcription API. This library provides both **REST API** and **WebSocket** (real-time) support for comprehensive audio transcription, translation, and analysis using the Gladia v2 API.
 
 ## ⚠️ Disclaimer
 
@@ -8,20 +8,37 @@ This is a **community-driven project** and is **not affiliated with Gladia in an
 
 ## Features
 
+### 🚀 Core Capabilities
+
 - 🎵 **Audio Upload**: Upload audio files directly to Gladia's servers
-- 📝 **Transcription**: Create and manage transcription jobs
-- 🌍 **Translation**: Support for multi-language translation
+- 📝 **Pre-recorded Transcription**: Create and manage batch transcription jobs
+- ⚡ **Real-time Transcription**: Live audio transcription via WebSocket
+- 🌍 **Translation**: Support for multi-language translation (real-time and post-processing)
 - 👥 **Speaker Diarization**: Identify different speakers in audio
 - 📱 **Subtitles**: Generate SRT and VTT subtitle formats
-- 🔍 **Moderation**: Content moderation capabilities
+- 🔍 **Content Moderation**: Built-in content moderation capabilities
+
+### 🧠 Advanced AI Features
+
+- 🏷️ **Named Entity Recognition**: Extract names, places, organizations, and other entities
+- 😊 **Sentiment Analysis**: Analyze emotional tone and sentiment
+- 📋 **Summarization**: Generate concise summaries of transcriptions
+- ⏱️ **Sentence Timestamps**: Detailed timing information at sentence level
+- 🎯 **Speech Events**: Real-time speech start/end detection
+
+### 🔧 Technical Features
+
 - 📊 **Async Support**: Asynchronous operations for better performance
 - 🛡️ **Error Handling**: Comprehensive error handling and validation
+- 🔄 **Session Management**: Full WebSocket session lifecycle management
+- 📡 **Event Callbacks**: Rich callback system for real-time events
+- 🎛️ **Configurable Processing**: Flexible real-time and post-processing options
 
 ## Requirements
 
 - **C++17** or later
 - **CMake 3.16** or later
-- **Boost** (system, thread components)
+- **Boost** (system, thread, beast components)
 - **OpenSSL**
 - **Internet connection** for API calls
 
@@ -29,6 +46,7 @@ This is a **community-driven project** and is **not affiliated with Gladia in an
 
 - [nlohmann/json](https://github.com/nlohmann/json) - JSON parsing
 - [spdlog](https://github.com/gabime/spdlog) - Logging
+- [base64](https://github.com/tobiaslocker/base64) - Base64 encoding/decoding
 
 ## Installation
 
@@ -117,7 +135,7 @@ cmake --build . --config Release
 
 ## Quick Start
 
-### Basic Usage
+### REST API Usage (Pre-recorded Audio)
 
 ```cpp
 #include "gladiapp/gladiapp_rest.hpp"
@@ -136,6 +154,8 @@ int main() {
         request.audio_url = uploadResponse.audio_url;
         request.diarization = true;
         request.subtitles = true;
+        request.translation = true;
+        request.translation_config.target_languages = {"fr", "es"};
         
         // Start transcription job
         auto jobResponse = client.preRecorded(request);
@@ -158,6 +178,57 @@ int main() {
 }
 ```
 
+### WebSocket Usage (Real-time Audio)
+
+```cpp
+#include "gladiapp/gladiapp_ws.hpp"
+#include <vector>
+
+int main() {
+    // Initialize WebSocket client
+    gladiapp::v2::ws::GladiaWebsocketClient client("your-api-key-here");
+    
+    // Configure session
+    gladiapp::v2::ws::request::InitializeSessionRequest initRequest;
+    initRequest.channels = 1;
+    initRequest.bit_depth = gladiapp::v2::ws::request::InitializeSessionRequest::BitDepth::BIT_DEPTH_16;
+    initRequest.encoding = gladiapp::v2::ws::request::InitializeSessionRequest::Encoding::WAV_PCM;
+    initRequest.sample_rate = gladiapp::v2::ws::request::InitializeSessionRequest::SampleRate::SAMPLE_RATE_16000;
+    
+    // Enable real-time features
+    gladiapp::v2::ws::request::InitializeSessionRequest::RealtimeProcessing realtimeProcessing;
+    realtimeProcessing.translation = true;
+    realtimeProcessing.named_entity_recognition = true;
+    initRequest.realtime_processing = realtimeProcessing;
+    
+    // Create and connect session
+    auto session = client.connect(initRequest);
+    if (session && session->connectAndStart()) {
+        
+        // Set up callbacks
+        session->setOnTranscriptCallback([](const auto& transcript) {
+            std::cout << "Transcript: " << transcript.data.utterance.text << std::endl;
+        });
+        
+        session->setOnTranslationCallback([](const auto& translation) {
+            if (translation.data.has_value()) {
+                std::cout << "Translation: " << translation.data->translated_utterance.text << std::endl;
+            }
+        });
+        
+        // Send audio data
+        std::vector<uint8_t> audioData = readAudioFile("audio.wav");
+        session->sendAudioBinary(audioData.data(), audioData.size());
+        
+        // Process results...
+        session->sendStopSignal();
+        session->disconnect();
+    }
+    
+    return 0;
+}
+```
+
 ### Async Upload Example
 
 ```cpp
@@ -173,13 +244,61 @@ std::future<gladiapp::v2::response::UploadResponse> uploadFuture =
 auto uploadResponse = uploadFuture.get();
 ```
 
+## Usage Patterns
+
+### When to Use REST API vs WebSocket
+
+**Use REST API for:**
+
+- 📁 **Pre-recorded audio files** that you want to transcribe in batch
+- 🎯 **High accuracy requirements** where processing time is not critical
+- 🔄 **Offline processing** scenarios
+- 📊 **Complex post-processing** like detailed analytics and reporting
+- 💾 **Archival transcriptions** that will be stored and retrieved later
+
+**Use WebSocket for:**
+
+- ⚡ **Real-time transcription** during live conversations or meetings
+- 🎙️ **Live streaming audio** from microphones or audio inputs
+- 💬 **Interactive applications** that need immediate feedback
+- 🎮 **Voice-controlled applications** and games
+- 📱 **Live captioning** and accessibility features
+
+### Hybrid Usage
+
+You can also combine both approaches in a single application:
+
+```cpp
+// Use WebSocket for real-time preview
+auto wsSession = wsClient.connect(realtimeConfig);
+wsSession->setOnTranscriptCallback([](const auto& transcript) {
+    // Show live captions
+    displayLiveCaption(transcript.data.utterance.text);
+});
+
+// Use REST API for final high-quality processing
+auto uploadResponse = restClient.upload(recordedAudioFile);
+gladiapp::v2::request::TranscriptionRequest request;
+request.audio_url = uploadResponse.audio_url;
+request.diarization = true;
+request.summarization = true;
+// Get final, high-quality transcription with full features
+auto job = restClient.preRecorded(request);
+```
+
 ## Examples
+
+The repository includes comprehensive working examples that demonstrate all the major features of the GladiaPP library. Both REST API and WebSocket examples are provided in the `examples/` directory.
 
 ### REST API Example
 
-The repository includes a complete working example that demonstrates all the major features of the GladiaPP library. The example is located in the `examples/example-rest/` directory.
+The REST API example is located in `examples/example-rest/` and demonstrates pre-recorded audio transcription with comprehensive features.
 
-#### Building and Running the Example
+### WebSocket Example
+
+The WebSocket example is located in `examples/example-ws/` and demonstrates real-time audio transcription with live processing capabilities.
+
+#### Building and Running the Examples
 
 1. **Build the project** (if you haven't already):
 
@@ -189,22 +308,22 @@ cmake ..
 cmake --build .
 ```
 
-2. **Install the example** to the install directory:
+1. **Install the examples** to the install directory:
 
 ```bash
 cmake --install . --prefix ./install
 ```
 
-3. **Run the example**:
+1. **Run the examples**:
 
 ```bash
 cd install/bin
 ./run_example.sh
 ```
 
-#### What the Example Demonstrates
+#### What the REST Example Demonstrates
 
-The example (`examples/example-rest/main.cpp`) showcases:
+The REST example (`examples/example-rest/main.cpp`) showcases:
 
 - **🎵 Async Audio Upload**: Uploads a test audio file (`testing.wav`) asynchronously while performing other tasks
 - **📝 Transcription Job Creation**: Creates a comprehensive transcription job with multiple features enabled
@@ -216,7 +335,22 @@ The example (`examples/example-rest/main.cpp`) showcases:
 - **🔄 Job Polling**: Polls the transcription status until completion
 - **📋 Results Management**: Lists all transcription results and cleans them up
 
+#### What the WebSocket Example Demonstrates
+
+The WebSocket example (`examples/example-ws/main.cpp`) showcases:
+
+- **⚡ Real-time Transcription**: Live audio transcription as audio is being processed
+- **🌍 Real-time Translation**: Instant translation to multiple languages (French, Spanish)
+- **🏷️ Named Entity Recognition**: Real-time extraction of entities from speech
+- **📋 Summarization**: Post-processing summarization of the complete transcript
+- **🎯 Speech Events**: Detection of speech start/end events
+- **📡 Event Callbacks**: Rich callback system for handling different types of events
+- **🔄 Session Management**: Complete WebSocket session lifecycle
+- **🎛️ Configurable Processing**: Flexible real-time and post-processing configuration
+
 #### Example Features Configuration
+
+**REST API Configuration:**
 
 ```cpp
 gladiapp::v2::request::TranscriptionRequest request;
@@ -227,15 +361,40 @@ request.subtitles = true;                      // Subtitle generation
 request.sentences = true;                      // Sentence timestamps
 
 // Configure subtitle formats
-request.subtitles_config = gladiapp::v2::request::SubtitlesConfig();
+request.subtitles_config = gladiapp::v2::request::TranscriptionRequest::SubtitlesConfig();
 request.subtitles_config->formats = {
-    gladiapp::v2::request::SubtitlesConfig::Format::VTT,
-    gladiapp::v2::request::SubtitlesConfig::Format::SRT
+    gladiapp::v2::request::TranscriptionRequest::SubtitlesConfig::Format::VTT,
+    gladiapp::v2::request::TranscriptionRequest::SubtitlesConfig::Format::SRT
 };
 
 // Configure translation
 request.translation = true;
 request.translation_config.target_languages = {"fr", "de", "es"};
+```
+
+**WebSocket Configuration:**
+
+```cpp
+gladiapp::v2::ws::request::InitializeSessionRequest initRequest;
+initRequest.channels = 1;
+initRequest.bit_depth = request::InitializeSessionRequest::BitDepth::BIT_DEPTH_16;
+initRequest.encoding = request::InitializeSessionRequest::Encoding::WAV_PCM;
+initRequest.sample_rate = request::InitializeSessionRequest::SampleRate::SAMPLE_RATE_16000;
+
+// Real-time processing
+request::InitializeSessionRequest::RealtimeProcessing realtimeProcessing;
+realtimeProcessing.translation = true;
+realtimeProcessing.named_entity_recognition = true;
+
+// Translation configuration
+request::InitializeSessionRequest::RealtimeProcessing::TranslationConfig translationConfig;
+translationConfig.target_languages = {"fr", "es"};
+realtimeProcessing.translation_config = translationConfig;
+
+// Post processing
+request::InitializeSessionRequest::PostProcessing postProcessing;
+postProcessing.summarization = true;
+initRequest.post_processing = postProcessing;
 ```
 
 #### Example Output
@@ -260,7 +419,6 @@ The example includes:
 - **`main.cpp`**: The main example source code
 - **`testing.wav`**: A sample audio file for testing
 - **`CMakeLists.txt`**: Build configuration for the example
-- **`run_example.sh`**: Launcher script that sets up the library path
 
 #### API Key Note
 
@@ -303,7 +461,7 @@ export GLADIA_API_KEY="your-actual-api-key"
 
 ## API Reference
 
-### GladiaRestClient
+### GladiaRestClient (Pre-recorded Audio)
 
 #### Constructor
 
@@ -319,9 +477,37 @@ GladiaRestClient(const std::string& apiKey);
 - `getResults(const ListResultsQuery& query, TranscriptionError* error = nullptr)` - List all results
 - `deleteResult(const std::string& id, TranscriptionError* error = nullptr)` - Delete a result
 
+### GladiaWebsocketClient (Real-time Audio)
+
+#### WebSocket Constructor
+
+```cpp
+GladiaWebsocketClient(const std::string& apiKey);
+```
+
+#### WebSocket Methods
+
+- `connect(const InitializeSessionRequest& request, TranscriptionError* error = nullptr)` - Create WebSocket session
+- Session methods:
+  - `connectAndStart()` - Start the WebSocket connection
+  - `sendAudioBinary(const uint8_t* data, int size)` - Send audio data
+  - `sendStopSignal()` - Signal end of audio stream
+  - `disconnect()` - Close the connection
+
+#### Event Callbacks
+
+- `setOnConnectedCallback()` - Connection established
+- `setOnSpeechStartedCallback()` - Speech detection started
+- `setOnSpeechEndedCallback()` - Speech detection ended
+- `setOnTranscriptCallback()` - Transcription results (partial/final)
+- `setOnTranslationCallback()` - Translation results
+- `setOnNamedEntityRecognitionCallback()` - Named entity recognition results
+- `setOnPostTranscriptCallback()` - Post-processing transcript
+- `setOnFinalTranscriptCallback()` - Final complete transcript
+
 ### Configuration Options
 
-#### TranscriptionRequest Features
+#### TranscriptionRequest Features (REST)
 
 - `diarization` - Speaker identification
 - `translation` - Multi-language translation
@@ -332,6 +518,13 @@ GladiaRestClient(const std::string& apiKey);
 - `sentiment_analysis` - Analyze sentiment
 - `summarization` - Generate summaries
 
+#### InitializeSessionRequest Features (WebSocket)
+
+- **Audio Configuration**: channels, bit_depth, encoding, sample_rate
+- **Real-time Processing**: translation, named_entity_recognition
+- **Post Processing**: summarization
+- **Messages Configuration**: Fine-grained control over what events to receive
+
 ## Project Structure
 
 ```text
@@ -339,33 +532,38 @@ gladiapp/
 ├── CMakeLists.txt              # Root CMake configuration
 ├── README.md                   # This file
 ├── LICENSE                     # MIT License file
-├── .gitignore                  # Git ignore rules
-├── .vscode/                    # VS Code configuration
 ├── build/                      # Build artifacts (generated)
-├── install/                    # Installation directory (generated)
-│   ├── bin/                   # Installed executables
-│   ├── include/               # Installed headers
-│   └── lib/                   # Installed libraries
-├── scripts/                    # Build and utility scripts
-│   └── run_example.sh.in      # Template for example runner script
 ├── examples/                   # Example applications
-│   └── example-rest/          # REST API example
+│   ├── example-rest/          # REST API example (pre-recorded)
+│   │   ├── CMakeLists.txt     # Example build configuration
+│   │   ├── main.cpp           # REST example source code
+│   │   └── testing.wav        # Sample audio file for testing
+│   └── example-ws/            # WebSocket example (real-time)
 │       ├── CMakeLists.txt     # Example build configuration
-│       ├── main.cpp           # Example source code
+│       ├── main.cpp           # WebSocket example source code
 │       └── testing.wav        # Sample audio file for testing
 └── gladiapp/                  # Main library source
     ├── CMakeLists.txt         # Library CMake configuration
     ├── include/               # Header files
     │   └── gladiapp/
     │       ├── gladiapp.hpp           # Main library header
+    │       ├── gladiapp_error.hpp     # Error handling
     │       ├── gladiapp_rest.hpp      # REST API client header
+    │       ├── gladiapp_rest_request.hpp  # REST request structures
+    │       ├── gladiapp_rest_response.hpp # REST response structures
+    │       ├── gladiapp_ws.hpp        # WebSocket client header
+    │       ├── gladiapp_ws_request.hpp    # WebSocket request structures
+    │       ├── gladiapp_ws_response.hpp   # WebSocket response structures
     │       ├── utils.hpp              # Utility functions
     │       └── impl/                  # Implementation details
-    │           └── gladia_rest_client_boost_impl.hpp
     └── src/                   # Implementation files
+        ├── gladiapp_error.cpp         # Error handling implementation
         ├── gladiapp_rest.cpp          # REST client implementation
-        ├── gladiapp_rest_request.cpp  # Request structures
-        └── gladiapp_rest_response.cpp # Response structures
+        ├── gladiapp_rest_request.cpp  # REST request structures
+        ├── gladiapp_rest_response.cpp # REST response structures
+        ├── gladiapp_ws.cpp            # WebSocket client implementation
+        ├── gladiapp_ws_request.cpp    # WebSocket request structures
+        └── gladiapp_ws_response.cpp   # WebSocket response structures
 ```
 
 ## Contributing
@@ -391,34 +589,44 @@ We welcome contributions! This is a community-driven project, and we appreciate 
 ## TODO
 
 - [ ] **Testing Suite**
-  - [ ] Unit tests for all API endpoints
+  - [ ] Unit tests for REST API endpoints
+  - [ ] Unit tests for WebSocket functionality
   - [ ] Integration tests with mock server
-  - [ ] Performance benchmarks
+  - [ ] Performance benchmarks for both REST and WebSocket
 
-- [ ] **Features**
-  - [ ] Real-time transcription support
-  - [ ] Webhook callback implementation
+- [ ] **Enhanced Features**
+  - [ ] Connection pooling for REST client
+  - [ ] Automatic reconnection for WebSocket sessions
   - [ ] Batch processing capabilities
   - [ ] Custom vocabulary configuration
-  - [ ] Audio format validation
+  - [ ] Audio format validation and conversion
+  - [ ] Streaming uploads for large files
 
 - [ ] **Documentation**
   - [ ] Complete API documentation with Doxygen
-  - [ ] More usage examples
+  - [ ] More usage examples for advanced features
   - [ ] Tutorial for beginners
   - [ ] Performance optimization guide
+  - [ ] WebSocket best practices guide
 
-- [ ] **Error Handling**
-  - [ ] Better error messages
-  - [ ] Retry mechanisms
+- [ ] **Error Handling & Reliability**
+  - [ ] Better error messages with context
+  - [ ] Retry mechanisms with exponential backoff
   - [ ] Rate limiting handling
   - [ ] Network timeout configuration
+  - [ ] Graceful degradation strategies
 
-- [ ] **Performance**
-  - [ ] Connection pooling
-  - [ ] Streaming uploads for large files
-  - [ ] Memory optimization
+- [ ] **Performance Optimizations**
+  - [ ] Memory optimization for large audio files
   - [ ] Async/await pattern improvements
+  - [ ] WebSocket message queuing
+  - [ ] Compression support for audio data
+
+- [ ] **Developer Experience**
+  - [ ] CMake package configuration
+  - [ ] vcpkg package support
+  - [ ] Conan package support
+  - [ ] Pre-built binaries for common platforms
 
 ## License
 
