@@ -88,7 +88,7 @@ namespace gladiapp
                 /**
                  * Represents a transcript event.
                  */
-                struct GLADIAPP_EXPORT Trans cript
+                struct GLADIAPP_EXPORT Transcript
                 {
                     std::string session_id;
                     std::string created_at;
@@ -186,6 +186,7 @@ namespace gladiapp
                     std::string session_id;
                     std::string created_at;
                     std::string type;
+                    std::optional<Error> error;
                     struct Data
                     {
                         std::string full_transcript;
@@ -203,11 +204,12 @@ namespace gladiapp
                 /**
                  * Represents the final script event.
                  */
-                struct GLADIAPP_EXPORT FinalScript
+                struct GLADIAPP_EXPORT FinalTranscript
                 {
                     std::string session_id;
                     std::string created_at;
                     std::string type;
+                    std::optional<Error> error;
                     struct Data
                     {
                         struct Metadata
@@ -261,6 +263,7 @@ namespace gladiapp
 
                                 static NamedEntityRecognitionResult fromJson(const nlohmann::json &json);
                             };
+                            std::optional<NamedEntityRecognitionResult> named_entity_recognition;
 
                             using NameConsistencyResult = GenericResult;
                             std::optional<NameConsistencyResult> name_consistency;
@@ -308,7 +311,6 @@ namespace gladiapp
 
                                 static AudioToLLMResult fromJson(const nlohmann::json &json);
                             };
-
                             std::optional<AudioToLLMResult> audio_to_llm;
 
                             /**
@@ -380,6 +382,8 @@ namespace gladiapp
                         std::optional<Translation> translation;
                     };
                     Data data;
+
+                    static FinalTranscript fromJson(const nlohmann::json &json);
                 };
 
                 /**
@@ -427,6 +431,34 @@ namespace gladiapp
                     Data data;
 
                     static SentimentAnalysis fromJson(const nlohmann::json &json);
+                };
+
+                struct GLADIAPP_EXPORT Chapterization
+                {
+                    std::string session_id;
+                    std::string created_at;
+                    std::string type;
+                    std::optional<Error> error;
+                    struct Data
+                    {
+                        struct Chapter {
+                            std::string headline;
+                            std::string gist;
+                            std::vector<std::string> keywords;
+                            double start;
+                            double end;
+                            std::vector<Sentence> sentences;
+                            std::string text;
+                            std::string abstractive_summary;
+                            std::string extractive_summary;
+                            std::string summary;
+
+                            static Chapter fromJson(const nlohmann::json &json);
+                        };
+                        std::vector<Chapter> results;
+                    };
+                    std::optional<Data> data;
+                    static Chapterization fromJson(const nlohmann::json &json);
                 };
 
                 /**

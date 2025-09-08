@@ -13,7 +13,9 @@ InitializeSessionResponse gladiapp::v2::ws::response::InitializeSessionResponse:
 SpeechEvent gladiapp::v2::ws::response::SpeechEvent::fromJson(const nlohmann::json &json)
 {
     SpeechEvent event;
-    event.session_id = json.at("session_id").get<std::string>();
+    if(json.contains("session_id") && json.at("session_id").is_string()) {
+        event.session_id = json.at("session_id").get<std::string>();
+    }
     event.created_at = json.at("created_at").get<std::string>();
     event.type = json.at("type").get<std::string>();
     event.data.time = json.at("data").at("time").get<double>();
@@ -72,11 +74,19 @@ Utterance gladiapp::v2::ws::response::Utterance::fromJson(const nlohmann::json &
 Transcript gladiapp::v2::ws::response::Transcript::fromJson(const nlohmann::json &json)
 {
     Transcript transcript;
-    transcript.session_id = json.at("session_id").get<std::string>();
-    transcript.created_at = json.at("created_at").get<std::string>();
-    transcript.type = json.at("type").get<std::string>();
-    transcript.data.id = json.at("data").at("id").get<std::string>();
-    transcript.data.is_final = json.at("data").at("is_final").get<bool>();
+    if(json.contains("session_id") && json.at("session_id").is_string()) {
+        transcript.session_id = json.at("session_id").get<std::string>();
+    }
+    if(json.contains("created_at") && json.at("created_at").is_string()) {
+        transcript.created_at = json.at("created_at").get<std::string>();
+    }
+    if(json.contains("type") && json.at("type").is_string()) {
+        transcript.type = json.at("type").get<std::string>();
+    }
+    if(json.contains("data") && json.at("data").is_object()) {
+        transcript.data.id = json.at("data").at("id").get<std::string>();
+        transcript.data.is_final = json.at("data").at("is_final").get<bool>();
+    }
     transcript.data.utterance = Utterance::fromJson(json.at("data").at("utterance"));
     return transcript;
 }
@@ -84,9 +94,15 @@ Transcript gladiapp::v2::ws::response::Transcript::fromJson(const nlohmann::json
 Translation gladiapp::v2::ws::response::Translation::fromJson(const nlohmann::json &json)
 {
     Translation translation;
-    translation.session_id = json.at("session_id").get<std::string>();
-    translation.created_at = json.at("created_at").get<std::string>();
-    translation.type = json.at("type").get<std::string>();
+    if(json.contains("session_id") && json.at("session_id").is_string()) {
+        translation.session_id = json.at("session_id").get<std::string>();
+    }
+    if(json.contains("created_at") && json.at("created_at").is_string()) {
+        translation.created_at = json.at("created_at").get<std::string>();
+    }
+    if(json.contains("type") && json.at("type").is_string()) {
+        translation.type = json.at("type").get<std::string>();
+    }
     if (json.contains("error") && json.at("error").is_object())
     {
         translation.error = Error::fromJson(json.at("error"));
@@ -107,19 +123,33 @@ Translation gladiapp::v2::ws::response::Translation::fromJson(const nlohmann::js
 NamedEntityRecognition::Data::Result gladiapp::v2::ws::response::NamedEntityRecognition::Data::Result::fromJson(const nlohmann::json &json)
 {
     Result result;
-    result.entity_type = json.at("entity_type").get<std::string>();
-    result.text = json.at("text").get<std::string>();
-    result.start = json.at("start").get<double>();
-    result.end = json.at("end").get<double>();
+    if(json.contains("entity_type") && json.at("entity_type").is_string()) {
+        result.entity_type = json.at("entity_type").get<std::string>();
+    }
+    if(json.contains("text") && json.at("text").is_string()) {
+        result.text = json.at("text").get<std::string>();
+    }
+    if(json.contains("start") && json.at("start").is_number()) {
+        result.start = json.at("start").get<double>();
+    }
+    if(json.contains("end") && json.at("end").is_number()) {
+        result.end = json.at("end").get<double>();
+    }
     return result;
 }
 
 NamedEntityRecognition gladiapp::v2::ws::response::NamedEntityRecognition::fromJson(const nlohmann::json &json)
 {
     NamedEntityRecognition recognition;
-    recognition.session_id = json.at("session_id").get<std::string>();
-    recognition.created_at = json.at("created_at").get<std::string>();
-    recognition.type = json.at("type").get<std::string>();
+    if(json.contains("session_id") && json.at("session_id").is_string()) {
+        recognition.session_id = json.at("session_id").get<std::string>();
+    }
+    if(json.contains("created_at") && json.at("created_at").is_string()) {
+        recognition.created_at = json.at("created_at").get<std::string>();
+    }
+    if(json.contains("type") && json.at("type").is_string()) {
+        recognition.type = json.at("type").get<std::string>();
+    }
     if (json.contains("error") && json.at("error").is_object())
     {
         recognition.error = Error::fromJson(json.at("error"));
@@ -153,9 +183,15 @@ gladiapp::v2::ws::response::SentimentAnalysis::Data::Result gladiapp::v2::ws::re
 SentimentAnalysis gladiapp::v2::ws::response::SentimentAnalysis::fromJson(const nlohmann::json &json)
 {
     SentimentAnalysis analysis;
-    analysis.session_id = json.at("session_id").get<std::string>();
-    analysis.created_at = json.at("created_at").get<std::string>();
-    analysis.type = json.at("type").get<std::string>();
+    if (json.contains("session_id") && json.at("session_id").is_string()) {
+        analysis.session_id = json.at("session_id").get<std::string>();
+    }
+    if (json.contains("created_at") && json.at("created_at").is_string()) {
+        analysis.created_at = json.at("created_at").get<std::string>();
+    }
+    if (json.contains("type") && json.at("type").is_string()) {
+        analysis.type = json.at("type").get<std::string>();
+    }
     if (json.contains("data") && json.at("data").is_object())
     {
         auto data = SentimentAnalysis::Data{};
@@ -173,28 +209,48 @@ SentimentAnalysis gladiapp::v2::ws::response::SentimentAnalysis::fromJson(const 
 LifecycleEvent gladiapp::v2::ws::response::LifecycleEvent::fromJson(const nlohmann::json &json)
 {
     LifecycleEvent event;
-    event.session_id = json.at("session_id").get<std::string>();
-    event.created_at = json.at("created_at").get<std::string>();
-    event.type = json.at("type").get<std::string>();
+    if (json.contains("session_id") && json.at("session_id").is_string()) {
+        event.session_id = json.at("session_id").get<std::string>();
+    }
+    if (json.contains("created_at") && json.at("created_at").is_string()) {
+        event.created_at = json.at("created_at").get<std::string>();
+    }
+    if (json.contains("type") && json.at("type").is_string()) {
+        event.type = json.at("type").get<std::string>();
+    }
     return event;
 }
 
 Acknowledgment gladiapp::v2::ws::response::Acknowledgment::fromJson(const nlohmann::json &json)
 {
     Acknowledgment acknowledgment;
-    acknowledgment.session_id = json.at("session_id").get<std::string>();
-    acknowledgment.created_at = json.at("created_at").get<std::string>();
-    acknowledgment.type = json.at("type").get<std::string>();
-    acknowledgment.acknowledged = json.at("acknowledged").get<bool>();
+    if (json.contains("session_id") && json.at("session_id").is_string()) {
+        acknowledgment.session_id = json.at("session_id").get<std::string>();
+    }
+    if (json.contains("created_at") && json.at("created_at").is_string()) {
+        acknowledgment.created_at = json.at("created_at").get<std::string>();
+    }
+    if (json.contains("type") && json.at("type").is_string()) {
+        acknowledgment.type = json.at("type").get<std::string>();
+    }
+    if (json.contains("acknowledged") && json.at("acknowledged").is_boolean()) {
+        acknowledgment.acknowledged = json.at("acknowledged").get<bool>();
+    }
     return acknowledgment;
 }
 
 Summarization gladiapp::v2::ws::response::Summarization::fromJson(const nlohmann::json &json)
 {
     Summarization summarization;
-    summarization.session_id = json.at("session_id").get<std::string>();
-    summarization.created_at = json.at("created_at").get<std::string>();
-    summarization.type = json.at("type").get<std::string>();
+    if (json.contains("session_id") && json.at("session_id").is_string()) {
+        summarization.session_id = json.at("session_id").get<std::string>();
+    }
+    if (json.contains("created_at") && json.at("created_at").is_string()) {
+        summarization.created_at = json.at("created_at").get<std::string>();
+    }
+    if (json.contains("type") && json.at("type").is_string()) {
+        summarization.type = json.at("type").get<std::string>();
+    }
     if (json.contains("error") && json.at("error").is_object())
     {
         summarization.error = Error::fromJson(json.at("error"));
@@ -208,26 +264,33 @@ Summarization gladiapp::v2::ws::response::Summarization::fromJson(const nlohmann
     return summarization;
 }
 
-gladiapp::v2::ws::response::FinalScript::Data::Transcription::AudioToLLMResult::Result gladiapp::v2::ws::response::FinalScript::Data::Transcription::AudioToLLMResult::Result::fromJson(const nlohmann::json &json) {
-    Result result;
-
+gladiapp::v2::ws::response::FinalTranscript::Data::Transcription::AudioToLLMResult::Result gladiapp::v2::ws::response::FinalTranscript::Data::Transcription::AudioToLLMResult::Result::fromJson(const nlohmann::json &json)
+{
+    Result result;    
     result.success = json.at("success").get<bool>();
     result.is_empty = json.at("is_empty").get<bool>();
     result.exec_time = json.at("exec_time").get<double>();
-    if (json.contains("error") && json.at("error").is_object()) {
+    if (json.contains("error") && json.at("error").is_object())
+    {
         result.error = Error::fromJson(json.at("error"));
     }
-    if (json.contains("results") && json.at("results").is_array()) {
-        for (const auto &item : json.at("results")) {
+    if (json.contains("results") && json.at("results").is_array())
+    {
+        for (const auto &item : json.at("results"))
+        {
             Result::ResultPair pair;
-            if (item.contains("prompt") && !item.at("prompt").is_null()) {
+            if (item.contains("prompt") && !item.at("prompt").is_null())
+            {
                 pair.prompt = item.at("prompt").get<std::string>();
             }
-            if (item.contains("response") && !item.at("response").is_null()) {
+            if (item.contains("response") && !item.at("response").is_null())
+            {
                 pair.response = item.at("response").get<std::string>();
             }
-            if (pair.prompt.has_value() || pair.response.has_value()) {
-                if (!result.results.has_value()) {
+            if (pair.prompt.has_value() || pair.response.has_value())
+            {
+                if (!result.results.has_value())
+                {
                     result.results = std::vector<Result::ResultPair>{};
                 }
                 result.results->push_back(std::move(pair));
@@ -237,19 +300,22 @@ gladiapp::v2::ws::response::FinalScript::Data::Transcription::AudioToLLMResult::
     return result;
 }
 
-gladiapp::v2::ws::response::FinalScript::Data::Transcription::AudioToLLMResult gladiapp::v2::ws::response::FinalScript::Data::Transcription::AudioToLLMResult::fromJson(const nlohmann::json &json)
+gladiapp::v2::ws::response::FinalTranscript::Data::Transcription::AudioToLLMResult gladiapp::v2::ws::response::FinalTranscript::Data::Transcription::AudioToLLMResult::fromJson(const nlohmann::json &json)
 {
     AudioToLLMResult audioToLLMResult;
 
     audioToLLMResult.success = json.at("success").get<bool>();
     audioToLLMResult.is_empty = json.at("is_empty").get<bool>();
     audioToLLMResult.exec_time = json.at("exec_time").get<double>();
-    if (json.contains("error") && json.at("error").is_object()) {
+    if (json.contains("error") && json.at("error").is_object())
+    {
         audioToLLMResult.error = Error::fromJson(json.at("error"));
     }
-    if (json.contains("results") && json.at("results").is_array()) {
+    if (json.contains("results") && json.at("results").is_array())
+    {
         auto results = std::vector<AudioToLLMResult::Result>{};
-        for (const auto &item : json.at("results")) {
+        for (const auto &item : json.at("results"))
+        {
             results.emplace_back(Result::fromJson(item));
         }
         audioToLLMResult.results = std::move(results);
@@ -257,7 +323,7 @@ gladiapp::v2::ws::response::FinalScript::Data::Transcription::AudioToLLMResult g
     return audioToLLMResult;
 }
 
-gladiapp::v2::ws::response::FinalScript::Data::Transcription::DisplayMode gladiapp::v2::ws::response::FinalScript::Data::Transcription::DisplayMode::fromJson(const nlohmann::json &json)
+gladiapp::v2::ws::response::FinalTranscript::Data::Transcription::DisplayMode gladiapp::v2::ws::response::FinalTranscript::Data::Transcription::DisplayMode::fromJson(const nlohmann::json &json)
 {
     DisplayMode displayMode;
     displayMode.success = json.at("success").get<bool>();
@@ -274,7 +340,7 @@ gladiapp::v2::ws::response::FinalScript::Data::Transcription::DisplayMode gladia
     return displayMode;
 }
 
-gladiapp::v2::ws::response::FinalScript::Data::Transcription::ChapterizationResult gladiapp::v2::ws::response::FinalScript::Data::Transcription::ChapterizationResult::fromJson(const nlohmann::json &json)
+gladiapp::v2::ws::response::FinalTranscript::Data::Transcription::ChapterizationResult gladiapp::v2::ws::response::FinalTranscript::Data::Transcription::ChapterizationResult::fromJson(const nlohmann::json &json)
 {
     ChapterizationResult chapterizationResult;
     chapterizationResult.success = json.at("success").get<bool>();
@@ -291,16 +357,19 @@ gladiapp::v2::ws::response::FinalScript::Data::Transcription::ChapterizationResu
     return chapterizationResult;
 }
 
-gladiapp::v2::ws::response::FinalScript::Data::Transcription::DiarizationResult::Result gladiapp::v2::ws::response::FinalScript::Data::Transcription::DiarizationResult::Result::fromJson(const nlohmann::json &json) {
+gladiapp::v2::ws::response::FinalTranscript::Data::Transcription::DiarizationResult::Result gladiapp::v2::ws::response::FinalTranscript::Data::Transcription::DiarizationResult::Result::fromJson(const nlohmann::json &json)
+{
     Result result;
     result.start = json.at("start").get<double>();
     result.end = json.at("end").get<double>();
     result.confidence = json.at("confidence").get<double>();
     result.channel = json.at("channel").get<int>();
-    if (json.contains("speaker") && !json.at("speaker").is_null()) {
+    if (json.contains("speaker") && !json.at("speaker").is_null())
+    {
         result.speaker = json.at("speaker").get<int>();
     }
-    for (const auto &wordJson : json.at("words")) {
+    for (const auto &wordJson : json.at("words"))
+    {
         result.words.push_back(Word::fromJson(wordJson));
     }
     result.text = json.at("text").get<std::string>();
@@ -308,7 +377,7 @@ gladiapp::v2::ws::response::FinalScript::Data::Transcription::DiarizationResult:
     return result;
 }
 
-gladiapp::v2::ws::response::FinalScript::Data::Transcription::DiarizationResult gladiapp::v2::ws::response::FinalScript::Data::Transcription::DiarizationResult::fromJson(const nlohmann::json &json)
+gladiapp::v2::ws::response::FinalTranscript::Data::Transcription::DiarizationResult gladiapp::v2::ws::response::FinalTranscript::Data::Transcription::DiarizationResult::fromJson(const nlohmann::json &json)
 {
     DiarizationResult result;
     result.success = json.at("success").get<bool>();
@@ -330,7 +399,7 @@ gladiapp::v2::ws::response::FinalScript::Data::Transcription::DiarizationResult 
     return result;
 }
 
-gladiapp::v2::ws::response::FinalScript::Data::Metadata gladiapp::v2::ws::response::FinalScript::Data::Metadata::fromJson(const nlohmann::json &json)
+gladiapp::v2::ws::response::FinalTranscript::Data::Metadata gladiapp::v2::ws::response::FinalTranscript::Data::Metadata::fromJson(const nlohmann::json &json)
 {
     Metadata metadata;
     metadata.audio_duration = json.at("audio_duration").get<double>();
@@ -340,7 +409,7 @@ gladiapp::v2::ws::response::FinalScript::Data::Metadata gladiapp::v2::ws::respon
     return metadata;
 }
 
-gladiapp::v2::ws::response::FinalScript::Data::Transcription::GenericResult gladiapp::v2::ws::response::FinalScript::Data::Transcription::GenericResult::fromJson(const nlohmann::json &json)
+gladiapp::v2::ws::response::FinalTranscript::Data::Transcription::GenericResult gladiapp::v2::ws::response::FinalTranscript::Data::Transcription::GenericResult::fromJson(const nlohmann::json &json)
 {
     GenericResult result;
     result.success = json.at("success").get<bool>();
@@ -357,7 +426,7 @@ gladiapp::v2::ws::response::FinalScript::Data::Transcription::GenericResult glad
     return result;
 }
 
-gladiapp::v2::ws::response::FinalScript::Data::Transcription::NamedEntityRecognitionResult gladiapp::v2::ws::response::FinalScript::Data::Transcription::NamedEntityRecognitionResult::fromJson(const nlohmann::json &json)
+gladiapp::v2::ws::response::FinalTranscript::Data::Transcription::NamedEntityRecognitionResult gladiapp::v2::ws::response::FinalTranscript::Data::Transcription::NamedEntityRecognitionResult::fromJson(const nlohmann::json &json)
 {
     NamedEntityRecognitionResult result;
     result.success = json.at("success").get<bool>();
@@ -374,18 +443,25 @@ gladiapp::v2::ws::response::FinalScript::Data::Transcription::NamedEntityRecogni
     return result;
 }
 
-gladiapp::v2::ws::response::FinalScript::Data::Transcription gladiapp::v2::ws::response::FinalScript::Data::Transcription::fromJson(const nlohmann::json &json)
+gladiapp::v2::ws::response::FinalTranscript::Data::Transcription gladiapp::v2::ws::response::FinalTranscript::Data::Transcription::fromJson(const nlohmann::json &json)
 {
     Transcription transcription;
     transcription.full_transcript = json.at("full_transcript").get<std::string>();
     transcription.languages = json.at("languages").get<std::vector<std::string>>();
-    for (const auto &subtitleJson : json.at("subtitles"))
+    if (json.contains("subtitles") && json.at("subtitles").is_array())
     {
-        transcription.subtitles.push_back(Subtitle::fromJson(subtitleJson));
+
+        for (const auto &subtitleJson : json.at("subtitles"))
+        {
+            transcription.subtitles.push_back(Subtitle::fromJson(subtitleJson));
+        }
     }
-    for (const auto &utteranceJson : json.at("utterances"))
+    if (json.contains("utterances") && json.at("utterances").is_array())
     {
-        transcription.utterances.push_back(Utterance::fromJson(utteranceJson));
+        for (const auto &utteranceJson : json.at("utterances"))
+        {
+            transcription.utterances.push_back(Utterance::fromJson(utteranceJson));
+        }
     }
     if (json.contains("summarization") && !json.at("summarization").is_null())
     {
@@ -394,6 +470,10 @@ gladiapp::v2::ws::response::FinalScript::Data::Transcription gladiapp::v2::ws::r
     if (json.contains("moderation") && !json.at("moderation").is_null())
     {
         transcription.moderation = GenericResult::fromJson(json.at("moderation"));
+    }
+    if (json.contains("named_entity_recognition") && !json.at("named_entity_recognition").is_null())
+    {
+        transcription.named_entity_recognition = NamedEntityRecognitionResult::fromJson(json.at("named_entity_recognition"));
     }
     if (json.contains("name_consistency") && !json.at("name_consistency").is_null())
     {
@@ -427,6 +507,10 @@ gladiapp::v2::ws::response::FinalScript::Data::Transcription gladiapp::v2::ws::r
     {
         transcription.chapters = ChapterizationResult::fromJson(json.at("chapters"));
     }
+    if (json.contains("diarization_enhanced") && !json.at("diarization_enhanced").is_null())
+    {
+        transcription.diarization_enhanced = DiarizationResult::fromJson(json.at("diarization_enhanced"));
+    }
     if (json.contains("diarization") && !json.at("diarization").is_null())
     {
         transcription.diarization = DiarizationResult::fromJson(json.at("diarization"));
@@ -440,4 +524,148 @@ gladiapp::v2::ws::response::Subtitle gladiapp::v2::ws::response::Subtitle::fromJ
     subtitle.format = json.at("format").get<std::string>();
     subtitle.subtitles = json.at("subtitles").get<std::string>();
     return subtitle;
+}
+
+gladiapp::v2::ws::response::Chapterization::Data::Chapter gladiapp::v2::ws::response::Chapterization::Data::Chapter::fromJson(const nlohmann::json &json)
+{
+    Chapter chapter;
+    chapter.headline = json.at("headline").get<std::string>();
+    chapter.start = json.at("start").get<double>();
+    chapter.end = json.at("end").get<double>();
+    chapter.summary = json.at("summary").get<std::string>();
+    chapter.gist = json.at("gist").get<std::string>();
+    chapter.keywords = json.at("keywords").get<std::vector<std::string>>();
+    chapter.text = json.at("text").get<std::string>();
+    if (json.contains("sentences") && json.at("sentences").is_array())
+    {
+        for (const auto &sentenceJson : json.at("sentences"))
+        {
+            chapter.sentences.push_back(Sentence::fromJson(sentenceJson));
+        }
+    }
+    return chapter;
+}
+
+gladiapp::v2::ws::response::Chapterization gladiapp::v2::ws::response::Chapterization::fromJson(const nlohmann::json &json)
+{
+    Chapterization chapterization;
+    chapterization.session_id = json.at("session_id").get<std::string>();
+    chapterization.created_at = json.at("created_at").get<std::string>();
+    chapterization.type = json.at("type").get<std::string>();
+    if (json.contains("error") && json.at("error").is_object())
+    {
+        chapterization.error = Error::fromJson(json.at("error"));
+    }
+    if (json.contains("data") && json.at("data").is_object())
+    {
+        auto data = Chapterization::Data{};
+        for (const auto &chapterJson : json.at("data").at("results"))
+        {
+            data.results.push_back(Chapterization::Data::Chapter::fromJson(chapterJson));
+        }
+        chapterization.data = data;
+    }
+    return chapterization;
+}
+
+gladiapp::v2::ws::response::FinalTranscript gladiapp::v2::ws::response::FinalTranscript::fromJson(const nlohmann::json &json)
+{
+    FinalTranscript finalTranscript;
+    finalTranscript.session_id = json.at("session_id").get<std::string>();
+    finalTranscript.created_at = json.at("created_at").get<std::string>();
+    finalTranscript.type = json.at("type").get<std::string>();
+    if (json.contains("error") && json.at("error").is_object())
+    {
+        finalTranscript.error = Error::fromJson(json.at("error"));
+    }
+    if (json.contains("data") && json.at("data").is_object())
+    {
+        auto jsonData = json.at("data");
+        FinalTranscript::Data data;
+        data.metadata = FinalTranscript::Data::Metadata::fromJson(jsonData.at("metadata"));
+        if (jsonData.contains("transcription") && jsonData.at("transcription").is_object())
+        {
+            data.transcription = FinalTranscript::Data::Transcription::fromJson(jsonData.at("transcription"));
+        }
+        if (jsonData.contains("translation") && jsonData.at("translation").is_object())
+        {
+            data.translation = Translation::fromJson(jsonData.at("translation"));
+        }
+        finalTranscript.data = data;
+    }
+    return finalTranscript;
+}
+
+gladiapp::v2::ws::response::PostTranscript gladiapp::v2::ws::response::PostTranscript::fromJson(const nlohmann::json &json)
+{
+    PostTranscript postTranscript;
+    postTranscript.session_id = json.at("session_id").get<std::string>();
+    postTranscript.created_at = json.at("created_at").get<std::string>();
+    postTranscript.type = json.at("type").get<std::string>();
+    if (json.contains("error") && json.at("error").is_object())
+    {
+        postTranscript.error = Error::fromJson(json.at("error"));
+    }
+    if (json.contains("data") && json.at("data").is_object())
+    {
+        PostTranscript::Data data;
+        data.full_transcript = json.at("data").at("full_transcript").get<std::string>();
+        data.languages = json.at("data").at("languages").get<std::vector<std::string>>();
+        auto subtitles = std::vector<Subtitle>{};
+        if( json.at("data").contains("subtitles") && json.at("data").at("subtitles").is_array())
+        {
+            for (const auto &subtitleJson : json.at("data").at("subtitles"))
+            {
+                subtitles.push_back(Subtitle::fromJson(subtitleJson));
+            }
+        }
+        data.subtitles = subtitles;
+        auto utterances = std::vector<Utterance>{};
+        for (const auto &utteranceJson : json.at("data").at("utterances"))
+        {
+            utterances.push_back(Utterance::fromJson(utteranceJson));
+        }
+        data.utterances = utterances;
+        auto sentences = std::vector<Sentence>{};
+        if( json.at("data").contains("sentences") && json.at("data").at("sentences").is_array())
+        {
+            for (const auto &sentenceJson : json.at("data").at("sentences"))
+            {
+                sentences.push_back(Sentence::fromJson(sentenceJson));
+            }
+        }
+        data.sentences = sentences;
+        if (json.at("data").contains("results") && !json.at("data").at("results").is_null())
+        {
+            data.results = json.at("data").at("results").get<std::vector<std::string>>();
+        }
+        auto subtitlesVec = std::vector<Subtitle>{};
+        if (json.at("data").contains("subtitles") && !json.at("data").at("subtitles").is_null())
+        {
+            for (const auto &subtitleJson : json.at("data").at("subtitles"))
+            {
+                subtitlesVec.push_back(Subtitle::fromJson(subtitleJson));
+            }
+            data.subtitles = subtitlesVec;
+        }
+        postTranscript.data = data;
+    }
+    return postTranscript;
+}
+
+gladiapp::v2::ws::response::Sentence gladiapp::v2::ws::response::Sentence::fromJson(const nlohmann::json &json)
+{
+    Sentence sentence;
+    sentence.success = json.at("success").get<bool>();
+    sentence.is_empty = json.at("is_empty").get<bool>();
+    sentence.exec_time = json.at("exec_time").get<double>();
+    if (json.contains("error") && json.at("error").is_object())
+    {
+        sentence.error = Error::fromJson(json.at("error"));
+    }
+    if (json.contains("results") && json.at("results").is_array())
+    {
+        sentence.results = json.at("results").get<std::vector<std::string>>();
+    }
+    return sentence;
 }

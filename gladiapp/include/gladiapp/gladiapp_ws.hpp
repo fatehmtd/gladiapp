@@ -43,9 +43,9 @@ namespace gladiapp
                  * Post-processing event types
                  */
                 constexpr const char *POST_TRANSCRIPTION = "post_transcript";
-                constexpr const char *FINAL_TRANSCRIPTION = "final_transcript";
-                constexpr const char *CHAPTERIZATION = "chapterization";
-                constexpr const char *SUMMARIZATION = "summarization";
+                constexpr const char *FINAL_TRANSCRIPTION = "post_final_transcript";
+                constexpr const char *CHAPTERIZATION = "post_chapterization";
+                constexpr const char *SUMMARIZATION = "post_summarization";
 
                 /**
                  * lifecycle event types
@@ -140,7 +140,26 @@ namespace gladiapp
                 using OnTranslationCallback = std::function<void(const response::Translation &translation)>;
                 using OnNamedEntityRecognitionCallback = std::function<void(const response::NamedEntityRecognition &ner)>;
                 using OnSentimentAnalysisCallback = std::function<void(const response::SentimentAnalysis &analysis)>;
+
+                void setOnSpeechStartedCallback(const OnSpeechEventCallback &callback);
+                void setOnSpeechEndedCallback(const OnSpeechEventCallback &callback);
+                void setOnTranscriptCallback(const OnTranscriptCallback &callback);
+                void setOnTranslationCallback(const OnTranslationCallback &callback);
+                void setOnNamedEntityRecognitionCallback(const OnNamedEntityRecognitionCallback &callback);
+                void setOnSentimentAnalysisCallback(const OnSentimentAnalysisCallback &callback);
+
+                /**
+                 * Post-processing event callbacks
+                 */
+                using OnPostTranscriptCallback = std::function<void(const response::PostTranscript &postTranscript)>;
+                using OnFinalTranscriptCallback = std::function<void(const response::FinalTranscript &finalScript)>;
+                using OnChapterizationCallback = std::function<void(const response::Chapterization &chapterization)>;
                 using OnSummarizationCallback = std::function<void(const response::Summarization &summarization)>;
+
+                void setOnPostTranscriptCallback(const OnPostTranscriptCallback &callback);
+                void setOnFinalTranscriptCallback(const OnFinalTranscriptCallback &callback);
+                void setOnChapterizationCallback(const OnChapterizationCallback &callback);
+                void setOnSummarizationCallback(const OnSummarizationCallback &callback);
 
                 /**
                  * Acknowledgment callbacks
@@ -158,12 +177,11 @@ namespace gladiapp
                 using OnEndSessionCallback = std::function<void(const response::EndSession &event)>;
                 using OnStartRecordingCallback = std::function<void(const response::StartRecording &event)>;
                 using OnEndRecordingCallback = std::function<void(const response::EndRecording &event)>;
-
-                void setOnSpeechStartedCallback(const OnSpeechEventCallback &callback);
-                void setOnSpeechEndedCallback(const OnSpeechEventCallback &callback);
-                void setOnTranscriptCallback(const OnTranscriptCallback &callback);
-                void setOnTranslationCallback(const OnTranslationCallback &callback);
-                void setOnNamedEntityRecognitionCallback(const OnNamedEntityRecognitionCallback &callback);
+                
+                void setOnStartSessionCallback(const OnStartSessionCallback &callback);
+                void setOnEndSessionCallback(const OnEndSessionCallback &callback);
+                void setOnStartRecordingCallback(const OnStartRecordingCallback &callback);
+                void setOnEndRecordingCallback(const OnEndRecordingCallback &callback);
 
             private:
                 std::unique_ptr<GladiaWebsocketClientSessionImpl> _wsClientSessionImpl;
@@ -188,6 +206,9 @@ namespace gladiapp
                  * Post-processing event callbacks
                  */
                 OnSummarizationCallback _onSummarizationCallback;
+                OnFinalTranscriptCallback _onFinalTranscriptCallback;
+                OnPostTranscriptCallback _onPostTranscriptCallback;
+                OnChapterizationCallback _onChapterizationCallback;
 
                 /**
                  * Acknowledgment callbacks

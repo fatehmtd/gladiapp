@@ -137,24 +137,27 @@ void gladiapp::v2::ws::GladiaWebsocketClientSession::processDataMessage(const st
             // Post-processing event types
             else if (type == events::POST_TRANSCRIPTION)
             {
-                response::Transcript transcript = response::Transcript::fromJson(json);
-                if (_onTranscriptCallback)
+                response::PostTranscript postTranscript = response::PostTranscript::fromJson(json);
+                if (_onPostTranscriptCallback)
                 {
-                    _onTranscriptCallback(transcript);
+                    _onPostTranscriptCallback(postTranscript);
                 }
             }
             else if (type == events::FINAL_TRANSCRIPTION)
             {
-                response::Transcript transcript = response::Transcript::fromJson(json);
-                if (_onTranscriptCallback)
+                response::FinalTranscript finalTranscript = response::FinalTranscript::fromJson(json);
+                if (_onFinalTranscriptCallback)
                 {
-                    _onTranscriptCallback(transcript);
+                    _onFinalTranscriptCallback(finalTranscript);
                 }
             }
             else if (type == events::CHAPTERIZATION)
             {
-                // Note: No callback defined in header for chapterization
-                spdlog::info("Chapterization event received but no callback defined");
+                response::Chapterization chapterization = response::Chapterization::fromJson(json);
+                if (_onChapterizationCallback)
+                {
+                    _onChapterizationCallback(chapterization);
+                }
             }
             else if (type == events::SUMMARIZATION)
             {
@@ -265,6 +268,26 @@ bool gladiapp::v2::ws::GladiaWebsocketClientSession::sendAudioJson(const uint8_t
     return _wsClientSessionImpl->sendTextJson(audioJson.dump());
 }
 
+void gladiapp::v2::ws::GladiaWebsocketClientSession::setOnPostTranscriptCallback(const OnPostTranscriptCallback &callback)
+{
+    _onPostTranscriptCallback = callback;
+}
+
+void gladiapp::v2::ws::GladiaWebsocketClientSession::setOnFinalTranscriptCallback(const OnFinalTranscriptCallback &callback)
+{
+    _onFinalTranscriptCallback = callback;
+}
+
+void gladiapp::v2::ws::GladiaWebsocketClientSession::setOnChapterizationCallback(const OnChapterizationCallback &callback)
+{
+    _onChapterizationCallback = callback;
+}
+
+void gladiapp::v2::ws::GladiaWebsocketClientSession::setOnSummarizationCallback(const OnSummarizationCallback &callback)
+{
+    _onSummarizationCallback = callback;
+}
+
 void gladiapp::v2::ws::GladiaWebsocketClientSession::setOnAudioChunkAcknowledgedCallback(const OnAudioChunkAcknowledgedCallback &callback)
 {
     _onAudioChunkAcknowledgedCallback = callback;
@@ -273,6 +296,26 @@ void gladiapp::v2::ws::GladiaWebsocketClientSession::setOnAudioChunkAcknowledged
 void gladiapp::v2::ws::GladiaWebsocketClientSession::setOnStopRecordingCallback(const OnStopRecordingAcknowledgmentCallback &callback)
 {
     _onStopRecordingAcknowledgmentCallback = callback;
+}
+
+void gladiapp::v2::ws::GladiaWebsocketClientSession::setOnStartSessionCallback(const OnStartSessionCallback &callback)
+{
+    _onStartSessionCallback = callback;
+}
+
+void gladiapp::v2::ws::GladiaWebsocketClientSession::setOnStartRecordingCallback(const OnStartRecordingCallback &callback)
+{
+    _onStartRecordingCallback = callback;
+}
+
+void gladiapp::v2::ws::GladiaWebsocketClientSession::setOnEndRecordingCallback(const OnEndRecordingCallback &callback)
+{
+    _onEndRecordingCallback = callback;
+}
+
+void gladiapp::v2::ws::GladiaWebsocketClientSession::setOnEndSessionCallback(const OnEndSessionCallback &callback)
+{
+    _onEndSessionCallback = callback;
 }
 
 void gladiapp::v2::ws::GladiaWebsocketClientSession::setOnConnectedCallback(const OnConnectivityCallback &callback)

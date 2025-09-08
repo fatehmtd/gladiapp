@@ -135,9 +135,22 @@ int main(int ac, char **av)
                 spdlog::error("Callback - Named Entity Recognition: Session ID: {}, message: {}.", ner.session_id, ner.error.has_value() ? ner.error->message.value() : "Unknown error");
             }
         });
+        session->setOnPostTranscriptCallback([](const response::PostTranscript &postTranscript) {
+            spdlog::info("Callback - Post Transcript: Session ID: {}, Full Transcript: {}",
+                         postTranscript.session_id, postTranscript.data.full_transcript);
+        });
+        session->setOnFinalTranscriptCallback([](const response::FinalTranscript &finalTranscript) {
+            if (finalTranscript.data.transcription.has_value())
+            {
+                spdlog::info("Callback - Final Transcript: Session ID: {}, Text: {}, Confidence: {}",
+                             finalTranscript.session_id, finalTranscript.data.transcription->utterances.size(), finalTranscript.data.transcription->languages.size());
+            } else {
+                spdlog::error("Callback - Final Transcript: Session ID: {}, message: {}.", finalTranscript.session_id, finalTranscript.error.has_value() ? finalTranscript.error->message.value() : "Unknown error");
+            }
+        });
 
         // Send audio data in chunks
-        size_t chunkSize = 3200 * 5; // e.g., 100ms of audio
+        size_t chunkSize = 3200 * 15; // e.g., 100ms of audio
         spdlog::info("Sending audio data in chunks of {} bytes...", chunkSize);
         // Simulate real-time sending by adding a small delay between chunks
         for (size_t offset = 0; offset < audioData.size(); offset += chunkSize)
