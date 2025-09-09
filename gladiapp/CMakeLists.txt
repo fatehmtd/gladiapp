@@ -9,10 +9,13 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 include(FetchContent)
 include(GNUInstallDirs)
 
-# Modern CMake: Use Boost's imported targets and avoid FindBoost
-find_package(boost_system REQUIRED CONFIG)
-find_package(boost_thread REQUIRED CONFIG)
-find_package(boost_beast REQUIRED CONFIG)
+if(WIN32)
+    find_package(boost_system REQUIRED CONFIG)
+    find_package(boost_thread REQUIRED CONFIG)
+    find_package(boost_beast REQUIRED CONFIG)
+else()
+    find_package(Boost REQUIRED COMPONENTS system thread)
+endif()
 find_package(OpenSSL REQUIRED)
 
 # Debug: Print Boost information
@@ -85,7 +88,7 @@ generate_export_header(gladiapp
 )
 
 target_include_directories(gladiapp PUBLIC
-    $<INSTALL_INTERFACE:include>  # For installed package (optional but good practice)
+    $<INSTALL_INTERFACE:include> # For installed package (optional but good practice)
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> # For direct build
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}> # To export the symbols header
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/gladiapp # to simplify the internal include files
@@ -93,11 +96,11 @@ target_include_directories(gladiapp PUBLIC
 
 # Installation rules
 install(TARGETS gladiapp
-        EXPORT gladiappTargets
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-        INCLUDES DESTINATION include)
+    EXPORT gladiappTargets
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    INCLUDES DESTINATION include)
 
 install(DIRECTORY include/
     DESTINATION include
@@ -105,5 +108,5 @@ install(DIRECTORY include/
     PATTERN "impl" EXCLUDE)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/gladiapp_export.h
-        DESTINATION include/gladiapp)
+    DESTINATION include/gladiapp)
 
