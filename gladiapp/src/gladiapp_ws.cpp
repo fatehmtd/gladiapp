@@ -270,7 +270,12 @@ bool gladiapp::v2::ws::GladiaWebsocketClientSession::sendAudioBinary(const uint8
         spdlog::warn("WebSocket is not connected. Cannot send audio binary.");
         return false;
     }
-    return _wsClientSessionImpl->sendAudioBinary(audioData, size);
+    return _wsClientSessionImpl->sendAudioBinary(audioData, size, [this](const std::string &errorMessage)
+                                                 {
+                                                         if (this->_onErrorCallback)
+                                                         {
+                                                             this->_onErrorCallback(errorMessage);
+                                                         } });
 }
 
 bool gladiapp::v2::ws::GladiaWebsocketClientSession::sendAudioJson(const uint8_t *audioData, int size) const
@@ -286,7 +291,12 @@ bool gladiapp::v2::ws::GladiaWebsocketClientSession::sendAudioJson(const uint8_t
     nlohmann::json chunk;
     chunk["chunk"] = base64::to_base64(binaryData);
     audioJson["data"] = chunk;
-    return _wsClientSessionImpl->sendTextJson(audioJson.dump());
+    return _wsClientSessionImpl->sendTextJson(audioJson.dump(), [this](const std::string &errorMessage)
+                                              {
+                                                         if (this->_onErrorCallback)
+                                                         {
+                                                             this->_onErrorCallback(errorMessage);
+                                                         } });
 }
 
 void gladiapp::v2::ws::GladiaWebsocketClientSession::setOnPostTranscriptCallback(const OnPostTranscriptCallback &callback)
@@ -342,6 +352,16 @@ void gladiapp::v2::ws::GladiaWebsocketClientSession::setOnEndSessionCallback(con
 void gladiapp::v2::ws::GladiaWebsocketClientSession::setOnConnectedCallback(const OnConnectivityCallback &callback)
 {
     _onConnectedCallback = callback;
+}
+
+void gladiapp::v2::ws::GladiaWebsocketClientSession::setOnDisconnectedCallback(const OnConnectivityCallback &callback)
+{
+    _onDisconnectedCallback = callback;
+}
+
+void gladiapp::v2::ws::GladiaWebsocketClientSession::setOnErrorCallback(const OnErrorCallback &callback)
+{
+    _onErrorCallback = callback;
 }
 
 void gladiapp::v2::ws::GladiaWebsocketClientSession::setOnSpeechStartedCallback(const OnSpeechEventCallback &callback)

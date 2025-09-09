@@ -94,10 +94,15 @@ int main(int ac, char **av)
 
     if (session->connectAndStart())
     {
+        bool waitForCompletion = true;
         spdlog::info("WebSocket session started successfully.");
 
         session->setOnConnectedCallback([]() {
             spdlog::info("WebSocket connected callback triggered.");
+        });
+        session->setOnDisconnectedCallback([&waitForCompletion]() {
+            spdlog::info("WebSocket disconnected callback triggered.");
+            waitForCompletion = false;
         });
 
         session->setOnSpeechStartedCallback([](const response::SpeechEvent &event) {
@@ -142,8 +147,8 @@ int main(int ac, char **av)
         session->setOnFinalTranscriptCallback([](const response::FinalTranscript &finalTranscript) {
             if (finalTranscript.data.transcription.has_value())
             {
-                spdlog::info("Callback - Final Transcript: Session ID: {}, Text: {}, Confidence: {}",
-                             finalTranscript.session_id, finalTranscript.data.transcription->utterances.size(), finalTranscript.data.transcription->languages.size());
+                spdlog::info("Callback - Final Transcript: Session ID: {}, Text: {}, Languages: {}",
+                             finalTranscript.session_id, finalTranscript.data.transcription->full_transcript, finalTranscript.data.transcription->languages.size());
             } else {
                 spdlog::error("Callback - Final Transcript: Session ID: {}, message: {}.", finalTranscript.session_id, finalTranscript.error.has_value() ? finalTranscript.error->message.value() : "Unknown error");
             }
@@ -163,13 +168,14 @@ int main(int ac, char **av)
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(100)); // simulate real-time sending
         }
-        session->sendStopSignal();
         spdlog::info("Finished sending audio data. Waiting for processing to complete...");
-
-        std::this_thread::sleep_for(std::chrono::seconds(60)); // wait for processing
-
-        session->sendStopSignal();
-        session->disconnect();
+        spdlog::info("Sending stop signal to indicate end of audio stream.");
+        session->sendStopSignal();    
+        
+        // wait for processing
+        while(waitForCompletion) {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
     }
     else
     {

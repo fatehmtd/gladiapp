@@ -205,7 +205,8 @@ namespace gladiapp::v2::ws
             return _webSocket.is_open();
         }
 
-        bool sendAudioBinary(const uint8_t *audioData, int size) const
+        bool sendAudioBinary(const uint8_t *audioData, int size,
+        std::function<void(const std::string&)> errorCallback = nullptr) const
         {
             if (!_webSocket.is_open())
             {
@@ -218,7 +219,17 @@ namespace gladiapp::v2::ws
                 {
                     _webSocket.text(false);
                     _webSocket.binary(true);
-                    _webSocket.write(net::buffer(audioData, size));
+                    beast::error_code ec;
+                    _webSocket.write(net::buffer(audioData, size), ec);
+                    if (ec)
+                    {
+                        spdlog::error("Error sending audio binary data: {}", ec.message());
+                        if (errorCallback)
+                        {
+                            errorCallback(ec.message());
+                        }
+                        return false;
+                    }
                     spdlog::debug("Sent {} bytes of audio binary data.", size);
                     return true;
                 }
@@ -230,7 +241,8 @@ namespace gladiapp::v2::ws
             return false;
         }
 
-        bool sendTextJson(const std::string &jsonText) const
+        bool sendTextJson(const std::string &jsonText,
+                        std::function<void(const std::string&)> errorCallback = nullptr) const
         {
             if (!_webSocket.is_open())
             {
@@ -242,7 +254,17 @@ namespace gladiapp::v2::ws
                 try
                 {
                     _webSocket.text(true);
-                    _webSocket.write(net::buffer(jsonText));
+                    beast::error_code ec;
+                    _webSocket.write(net::buffer(jsonText), ec);
+                    if (ec)
+                    {
+                        spdlog::error("Error sending JSON text data: {}", ec.message());
+                        if (errorCallback)
+                        {
+                            errorCallback(ec.message());
+                        }
+                        return false;
+                    }
                     spdlog::debug("Sent JSON text data: {}", jsonText);
                     return true;
                 }
