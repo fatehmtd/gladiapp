@@ -147,13 +147,16 @@ namespace gladiapp::v2::ws
             disconnect();
         }
 
-        bool connectAndStart(const std::function<void(const std::string &)> &dataReadCallback)
+        bool connectAndStart(const std::function<void(const std::string &)> &dataReadCallback,
+                         const std::function<void()> &onConnectedCallback = nullptr,
+                         const std::function<void(const std::string &message)> &onDisconnectedCallback = nullptr,
+                         const std::function<void(const std::string &errorMessage)> &onErrorCallback = nullptr)
         {
             if (!connect())
             {
                 return false;
             }
-            if (!startThread(dataReadCallback))
+            if (!startThread(dataReadCallback, onConnectedCallback, onDisconnectedCallback, onErrorCallback))
             {
                 disconnect();
                 return false;
@@ -203,7 +206,8 @@ namespace gladiapp::v2::ws
             return _webSocket.is_open();
         }
 
-        bool sendAudioBinary(const uint8_t *audioData, int size) const
+        bool sendAudioBinary(const uint8_t *audioData, int size,
+        std::function<void(const std::string&)> errorCallback = nullptr) const
         {
             if (!_webSocket.is_open())
             {
@@ -219,7 +223,17 @@ namespace gladiapp::v2::ws
             {
                 _webSocket.text(false);
                 _webSocket.binary(true);
-                _webSocket.write(net::buffer(audioData, size));
+                beast::error_code ec;
+                _webSocket.write(net::buffer(audioData, size), ec);
+                if (ec)
+                {
+                    spdlog::error("Error sending audio binary data: {}", ec.message());
+                    if (errorCallback)
+                    {
+                        errorCallback(ec.message());
+                    }
+                    return false;
+                }
                 spdlog::debug("Sent {} bytes of audio binary data.", size);
             }
             catch (std::exception &e)
@@ -230,7 +244,8 @@ namespace gladiapp::v2::ws
             return true;
         }
 
-        bool sendTextJson(const std::string &jsonText) const
+        bool sendTextJson(const std::string &jsonText,
+                        std::function<void(const std::string&)> errorCallback = nullptr) const
         {
             if (!_webSocket.is_open())
             {
@@ -242,7 +257,17 @@ namespace gladiapp::v2::ws
                 try
                 {
                     _webSocket.text(true);
-                    _webSocket.write(net::buffer(jsonText));
+                    beast::error_code ec;
+                    _webSocket.write(net::buffer(jsonText), ec);
+                    if (ec)
+                    {
+                        spdlog::error("Error sending JSON text data: {}", ec.message());
+                        if (errorCallback)
+                        {
+                            errorCallback(ec.message());
+                        }
+                        return false;
+                    }
                     spdlog::debug("Sent JSON text data: {}", jsonText);
                     return true;
                 }
@@ -306,22 +331,55 @@ namespace gladiapp::v2::ws
             return true;
         }
 
-        bool startThread(const std::function<void(const std::string &)> &dataReadCallback)
+        bool startThread(const std::function<void(const std::string &)> &dataReadCallback,
+                         const std::function<void()> &onConnectedCallback = nullptr,
+                         const std::function<void(const std::string &message)> &onDisconnectedCallback = nullptr,
+                         const std::function<void(const std::string &errorMessage)> &onErrorCallback = nullptr)
         {
-            _dataReceptionThread = std::thread([this, dataReadCallback]()
+            _dataReceptionThread = std::thread([this, dataReadCallback, onConnectedCallback, onDisconnectedCallback, onErrorCallback]()
                                                {
                 _keepReading = true;
                 try
                 {
                     beast::flat_buffer buffer;
                     beast::error_code ec;
+                    bool isConnected = false;
                     while (_webSocket.is_open() && _keepReading)
                     {                        
                         size_t bytesRead = _webSocket.read(buffer, ec);
                         if (ec)
                         {
-                            spdlog::error("Error reading from WebSocket: {}, {}, {}", ec.message(), ec.value(), ec.category().name());
+                            // Check if it's a normal WebSocket closure
+                            if (ec == beast::websocket::error::closed || 
+                                ec == net::error::eof ||
+                                ec == net::ssl::error::stream_truncated)
+                            {
+                                spdlog::warn("WebSocket closed by server: {}", ec.message());
+                                if(onDisconnectedCallback)
+                                {
+                                    onDisconnectedCallback(ec.message());
+                                }                                
+                            }
+                            else
+                            {
+                                spdlog::error("Error reading from WebSocket: {}, {}, {}", ec.message(), ec.value(), ec.category().name());
+                                if (onErrorCallback)
+                                {
+                                    onErrorCallback(ec.message());
+                                }
+                                if(onDisconnectedCallback)
+                                {
+                                    onDisconnectedCallback(ec.message());
+                                }
+                            }
                             break;
+                        } else {
+                            if(!isConnected) {
+                                isConnected = true;
+                                if(onConnectedCallback) {
+                                    onConnectedCallback();
+                                }
+                            }
                         }
                         std::string data(beast::buffers_to_string(buffer.data()));
                         buffer.consume(bytesRead);
