@@ -132,7 +132,8 @@ namespace gladiapp::v2::ws
     public:
         GladiaWebsocketClientSessionImpl(const std::string &endpoint) : _endpoint(endpoint),
                                                                         _sslContext(boost::asio::ssl::context::sslv23_client),
-                                                                        _webSocket(_ioContext, _sslContext)
+                                                                        _webSocket(_ioContext, _sslContext),
+                                                                        _canSendData(true)
         {
         }
 
@@ -213,32 +214,34 @@ namespace gladiapp::v2::ws
                 spdlog::warn("WebSocket is not open. Cannot send audio binary data.");
                 return false;
             }
-            if (_canSendData)
+            if (!_canSendData)
             {
-                try
-                {
-                    _webSocket.text(false);
-                    _webSocket.binary(true);
-                    beast::error_code ec;
-                    _webSocket.write(net::buffer(audioData, size), ec);
-                    if (ec)
-                    {
-                        spdlog::error("Error sending audio binary data: {}", ec.message());
-                        if (errorCallback)
-                        {
-                            errorCallback(ec.message());
-                        }
-                        return false;
-                    }
-                    spdlog::debug("Sent {} bytes of audio binary data.", size);
-                    return true;
-                }
-                catch (std::exception &e)
-                {
-                    spdlog::error("Error sending audio binary data: {}", e.what());
-                }
+                spdlog::warn("Cannot send audio data after stop signal has been sent.");
+                return false;
             }
-            return false;
+            try
+            {
+                _webSocket.text(false);
+                _webSocket.binary(true);
+                beast::error_code ec;
+                _webSocket.write(net::buffer(audioData, size), ec);
+                if (ec)
+                {
+                    spdlog::error("Error sending audio binary data: {}", ec.message());
+                    if (errorCallback)
+                    {
+                        errorCallback(ec.message());
+                    }
+                    return false;
+                }
+                spdlog::debug("Sent {} bytes of audio binary data.", size);
+            }
+            catch (std::exception &e)
+            {
+                spdlog::error("Error sending audio binary data: {}", e.what());
+                return false;
+            }
+            return true;
         }
 
         bool sendTextJson(const std::string &jsonText,
@@ -335,6 +338,7 @@ namespace gladiapp::v2::ws
         {
             _dataReceptionThread = std::thread([this, dataReadCallback, onConnectedCallback, onDisconnectedCallback, onErrorCallback]()
                                                {
+                _keepReading = true;
                 try
                 {
                     beast::flat_buffer buffer;
