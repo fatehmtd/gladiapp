@@ -23,7 +23,7 @@ gladiapp::v2::ws::GladiaWebsocketClient::~GladiaWebsocketClient()
 }
 
 GladiaWebsocketClientSession *gladiapp::v2::ws::GladiaWebsocketClient::connect(const request::InitializeSessionRequest &initRequest,
-                                                                               gladiapp::v2::response::TranscriptionError *error)
+                                                                               gladiapp::v2::response::TranscriptionError *error) const
 {
     auto initSessionResponse = _wsClientImpl->connect(initRequest, error);
     if (error != nullptr && error->status_code != 0)
@@ -31,6 +31,11 @@ GladiaWebsocketClientSession *gladiapp::v2::ws::GladiaWebsocketClient::connect(c
         return nullptr;
     }
     return new GladiaWebsocketClientSession(initSessionResponse.url);
+}
+
+bool gladiapp::v2::ws::GladiaWebsocketClient::deleteResult(const std::string &id, gladiapp::v2::response::TranscriptionError *transcriptionError) const
+{
+    return _wsClientImpl->deleteResultById(id, transcriptionError);
 }
 
 /**************************************************************************************************************************************

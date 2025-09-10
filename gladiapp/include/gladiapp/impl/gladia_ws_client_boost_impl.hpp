@@ -48,7 +48,7 @@ namespace gladiapp::v2::ws
         }
 
         InitializeSessionResponse connect(const InitializeSessionRequest &initRequest,
-                                          TranscriptionError *transcriptionError)
+                                          TranscriptionError *transcriptionError) const
         {
             try
             {
@@ -97,8 +97,6 @@ namespace gladiapp::v2::ws
 
                 std::string responseBody = httpResponse.body();
 
-                spdlog::info("Response: {}", responseBody);
-
                 if (httpResponse.result() == http::status::created)
                 {
                     InitializeSessionResponse initResponse = InitializeSessionResponse::fromJson(nlohmann::json::parse(responseBody));
@@ -119,6 +117,106 @@ namespace gladiapp::v2::ws
                 spdlog::error("Error occurred: {}", e.what());
             }
             return InitializeSessionResponse{};
+        }
+
+        bool getResultById(const std::string &id,
+                           nlohmann::json &outputJson,
+                           gladiapp::v2::response::TranscriptionError *transcriptionError) const
+        {
+            try
+            {
+                ssl::context sslContext(ssl::context::sslv23_client);
+                auto const results = _resolver.resolve(gladiapp::v2::common::HOST, "443");
+
+                beast::tcp_stream tcpStream(_ioContext);
+                tcpStream.connect(results);
+
+                ssl::stream<beast::tcp_stream> sslStream(std::move(tcpStream), sslContext);
+                sslStream.handshake(ssl::stream_base::client);
+
+                // Use buffer_body with the multipart data
+                http::request<http::empty_body> httpRequest{
+                    http::verb::get,
+                    std::string(gladiapp::v2::common::LIVE_ENDPOINT) + "/" + id,
+                    11};
+                httpRequest.set(http::field::host, gladiapp::v2::common::HOST);
+                httpRequest.set(gladiapp::v2::headers::X_GLADIA_KEY, _apiKey);
+                httpRequest.set(http::field::user_agent, gladiapp::v2::common::USER_AGENT);
+                httpRequest.set(http::field::content_type, "application/json");
+                httpRequest.prepare_payload();
+
+                // Send using Beast's serialization
+                http::write(sslStream, httpRequest);
+
+                // Read response
+                beast::flat_buffer responseBuffer;
+                http::response<http::string_body> httpResponse;
+                http::read(sslStream, responseBuffer, httpResponse);
+                if(httpResponse.result() != http::status::ok) {
+                    spdlog::error("Error getting session result: {}", httpResponse.body());
+                    if (transcriptionError != nullptr)
+                    {
+                        *transcriptionError = TranscriptionError::fromJson(httpResponse.body());
+                    }
+                    return false;
+                }
+                outputJson = nlohmann::json::parse(httpResponse.body());
+            }
+            catch (std::exception &e)
+            {
+                spdlog::error("Error occurred: {}", e.what());
+                return false;
+            }
+            return true;
+        }
+
+        bool deleteResultById(const std::string &id,
+                              gladiapp::v2::response::TranscriptionError *transcriptionError) const
+        {
+            try
+            {
+                ssl::context sslContext(ssl::context::sslv23_client);
+                auto const results = _resolver.resolve(gladiapp::v2::common::HOST, "443");
+
+                beast::tcp_stream tcpStream(_ioContext);
+                tcpStream.connect(results);
+
+                ssl::stream<beast::tcp_stream> sslStream(std::move(tcpStream), sslContext);
+                sslStream.handshake(ssl::stream_base::client);
+
+                // Use buffer_body with the multipart data
+                http::request<http::empty_body> httpRequest{
+                    http::verb::delete_,
+                    std::string(gladiapp::v2::common::LIVE_ENDPOINT) + "/" + id,
+                    11};
+                httpRequest.set(http::field::host, gladiapp::v2::common::HOST);
+                httpRequest.set(gladiapp::v2::headers::X_GLADIA_KEY, _apiKey);
+                httpRequest.set(http::field::user_agent, gladiapp::v2::common::USER_AGENT);
+                httpRequest.set(http::field::content_type, "application/json");
+                httpRequest.prepare_payload();
+
+                // Send using Beast's serialization
+                http::write(sslStream, httpRequest);
+
+                // Read response
+                beast::flat_buffer responseBuffer;
+                http::response<http::string_body> httpResponse;
+                http::read(sslStream, responseBuffer, httpResponse);
+                if(httpResponse.result() != http::status::accepted) {
+                    spdlog::error("Error deleting session: {}", httpResponse.body());
+                    if (transcriptionError != nullptr)
+                    {
+                        *transcriptionError = TranscriptionError::fromJson(httpResponse.body());
+                    }
+                    return false;
+                }
+            }
+            catch (std::exception &e)
+            {
+                spdlog::error("Error occurred: {}", e.what());
+                return false;
+            }
+            return true;
         }
 
     private:
@@ -148,9 +246,9 @@ namespace gladiapp::v2::ws
         }
 
         bool connectAndStart(const std::function<void(const std::string &)> &dataReadCallback,
-                         const std::function<void()> &onConnectedCallback = nullptr,
-                         const std::function<void(const std::string &message)> &onDisconnectedCallback = nullptr,
-                         const std::function<void(const std::string &errorMessage)> &onErrorCallback = nullptr)
+                             const std::function<void()> &onConnectedCallback = nullptr,
+                             const std::function<void(const std::string &message)> &onDisconnectedCallback = nullptr,
+                             const std::function<void(const std::string &errorMessage)> &onErrorCallback = nullptr)
         {
             if (!connect())
             {
@@ -207,7 +305,7 @@ namespace gladiapp::v2::ws
         }
 
         bool sendAudioBinary(const uint8_t *audioData, int size,
-        std::function<void(const std::string&)> errorCallback = nullptr) const
+                             std::function<void(const std::string &)> errorCallback = nullptr) const
         {
             if (!_webSocket.is_open())
             {
@@ -221,7 +319,6 @@ namespace gladiapp::v2::ws
             }
             try
             {
-                _webSocket.text(false);
                 _webSocket.binary(true);
                 beast::error_code ec;
                 _webSocket.write(net::buffer(audioData, size), ec);
@@ -245,38 +342,40 @@ namespace gladiapp::v2::ws
         }
 
         bool sendTextJson(const std::string &jsonText,
-                        std::function<void(const std::string&)> errorCallback = nullptr) const
+                          std::function<void(const std::string &)> errorCallback = nullptr) const
         {
             if (!_webSocket.is_open())
             {
                 spdlog::warn("WebSocket is not open. Cannot send text data.");
                 return false;
             }
-            if (_canSendData)
+            if (!_canSendData)
             {
-                try
-                {
-                    _webSocket.text(true);
-                    beast::error_code ec;
-                    _webSocket.write(net::buffer(jsonText), ec);
-                    if (ec)
-                    {
-                        spdlog::error("Error sending JSON text data: {}", ec.message());
-                        if (errorCallback)
-                        {
-                            errorCallback(ec.message());
-                        }
-                        return false;
-                    }
-                    spdlog::debug("Sent JSON text data: {}", jsonText);
-                    return true;
-                }
-                catch (std::exception &e)
-                {
-                    spdlog::error("Error sending JSON text data: {}", e.what());
-                }
+                spdlog::warn("Cannot send text data after stop signal has been sent.");
+                return false;
             }
-            return false;
+            try
+            {
+                _webSocket.text(true);
+                beast::error_code ec;
+                _webSocket.write(net::buffer(jsonText), ec);
+                if (ec)
+                {
+                    spdlog::error("Error sending JSON text data: {}", ec.message());
+                    if (errorCallback)
+                    {
+                        errorCallback(ec.message());
+                    }
+                    return false;
+                }
+                spdlog::debug("Sent JSON text data: {}", jsonText);
+            }
+            catch (std::exception &e)
+            {
+                spdlog::error("Error sending JSON text data: {}", e.what());
+                return false;
+            }
+            return true;
         }
 
     private:
@@ -358,7 +457,7 @@ namespace gladiapp::v2::ws
                                 if(onDisconnectedCallback)
                                 {
                                     onDisconnectedCallback(ec.message());
-                                }                                
+                                }
                             }
                             else
                             {

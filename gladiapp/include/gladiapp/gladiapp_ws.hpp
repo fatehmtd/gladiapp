@@ -75,7 +75,10 @@ namespace gladiapp
                 ~GladiaWebsocketClient();
 
                 GladiaWebsocketClientSession *connect(const request::InitializeSessionRequest &initRequest,
-                                                      gladiapp::v2::response::TranscriptionError *error = nullptr);
+                                                      gladiapp::v2::response::TranscriptionError *error = nullptr) const;
+
+                bool deleteResult(const std::string &id,
+                                  gladiapp::v2::response::TranscriptionError *transcriptionError = nullptr) const;
 
             private:
                 std::unique_ptr<GladiaWebsocketClientImpl> _wsClientImpl;
