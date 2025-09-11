@@ -489,19 +489,38 @@ namespace gladiapp
                 using EndRecording = LifecycleEvent;
 
                 /**
-                 * Acknowledgment event structure.
+                 * Audio chunk acknowledgment event structure.
                  */
-                struct GLADIAPP_EXPORT Acknowledgment
-                {
+                struct GLADIAPP_EXPORT AudioChunkAcknowledgment {
                     std::string session_id;
                     std::string created_at;
                     std::string type;
                     bool acknowledged;
-                    static Acknowledgment fromJson(const nlohmann::json &json);
+                    std::optional<Error> error;
+                    struct Data {
+                        std::vector<double> byte_range;
+                        std::vector<double> time_range;
+                    };
+                    std::optional<Data> data;
+                    static AudioChunkAcknowledgment fromJson(const nlohmann::json &json);
                 };
 
-                using AudioChunkAcknowledgment = Acknowledgment;
-                using StopRecordingAcknowledgment = Acknowledgment;
+                /**
+                 * Stop recording acknowledgment event structure.
+                 */
+                struct GLADIAPP_EXPORT StopRecordingAcknowledgment {
+                    std::string session_id;
+                    std::string created_at;
+                    std::string type;
+                    bool acknowledged;
+                    std::optional<Error> error;
+                    struct Data {
+                        double recording_duration;
+                        double recording_left_to_process;
+                    };
+                    std::optional<Data> data;
+                    static StopRecordingAcknowledgment fromJson(const nlohmann::json &json);
+                };
 
                 /**
                  * Represents a Live Transcription Result.

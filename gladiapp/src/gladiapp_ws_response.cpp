@@ -222,24 +222,6 @@ LifecycleEvent gladiapp::v2::ws::response::LifecycleEvent::fromJson(const nlohma
     return event;
 }
 
-Acknowledgment gladiapp::v2::ws::response::Acknowledgment::fromJson(const nlohmann::json &json)
-{
-    Acknowledgment acknowledgment;
-    if (json.contains("session_id") && json.at("session_id").is_string()) {
-        acknowledgment.session_id = json.at("session_id").get<std::string>();
-    }
-    if (json.contains("created_at") && json.at("created_at").is_string()) {
-        acknowledgment.created_at = json.at("created_at").get<std::string>();
-    }
-    if (json.contains("type") && json.at("type").is_string()) {
-        acknowledgment.type = json.at("type").get<std::string>();
-    }
-    if (json.contains("acknowledged") && json.at("acknowledged").is_boolean()) {
-        acknowledgment.acknowledged = json.at("acknowledged").get<bool>();
-    }
-    return acknowledgment;
-}
-
 Summarization gladiapp::v2::ws::response::Summarization::fromJson(const nlohmann::json &json)
 {
     Summarization summarization;
@@ -835,4 +817,52 @@ gladiapp::v2::ws::response::LiveTranscriptionResult::Result::TranslationResult g
         translationResult.results = std::move(results);
     }
     return translationResult;
+}
+
+AudioChunkAcknowledgment gladiapp::v2::ws::response::AudioChunkAcknowledgment::fromJson(const nlohmann::json &json)
+{
+    AudioChunkAcknowledgment acknowledgment;
+    acknowledgment.session_id = json.at("session_id").get<std::string>();
+    acknowledgment.created_at = json.at("created_at").get<std::string>();
+    acknowledgment.type = json.at("type").get<std::string>();
+    acknowledgment.acknowledged = json.at("acknowledged").get<bool>();
+    if(json.contains("error") && json.at("error").is_object()) {
+        acknowledgment.error = Error::fromJson(json.at("error"));
+    }
+    if(json.contains("data") && json.at("data").is_object()) {
+        auto dataJson = json.at("data");
+        AudioChunkAcknowledgment::Data data;
+        if(dataJson.contains("byte_range") && dataJson.at("byte_range").is_array()) {
+            data.byte_range = dataJson.at("byte_range").get<std::vector<double>>();
+        }
+        if(dataJson.contains("time_range") && dataJson.at("time_range").is_array()) {
+            data.time_range = dataJson.at("time_range").get<std::vector<double>>();
+        }
+        acknowledgment.data = data;
+    }
+    return acknowledgment;
+}
+
+StopRecordingAcknowledgment gladiapp::v2::ws::response::StopRecordingAcknowledgment::fromJson(const nlohmann::json &json)
+{
+    StopRecordingAcknowledgment acknowledgment;
+    acknowledgment.session_id = json.at("session_id").get<std::string>();
+    acknowledgment.created_at = json.at("created_at").get<std::string>();
+    acknowledgment.type = json.at("type").get<std::string>();
+    acknowledgment.acknowledged = json.at("acknowledged").get<bool>();
+    if(json.contains("error") && json.at("error").is_object()) {
+        acknowledgment.error = Error::fromJson(json.at("error"));
+    }
+    if(json.contains("data") && json.at("data").is_object()) {
+        auto dataJson = json.at("data");
+        StopRecordingAcknowledgment::Data data;
+        if(dataJson.contains("recording_duration")) {
+            data.recording_duration = dataJson.at("recording_duration").get<double>();
+        }
+        if(dataJson.contains("recording_left_to_process")) {
+            data.recording_left_to_process = dataJson.at("recording_left_to_process").get<double>();
+        }
+        acknowledgment.data = data;
+    }
+    return acknowledgment;
 }

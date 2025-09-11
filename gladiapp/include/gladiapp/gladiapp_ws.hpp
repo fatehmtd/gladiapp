@@ -185,7 +185,7 @@ namespace gladiapp
                 using OnStopRecordingAcknowledgmentCallback = std::function<void(const response::StopRecordingAcknowledgment &event)>;
 
                 void setOnAudioChunkAcknowledgedCallback(const OnAudioChunkAcknowledgedCallback &callback);
-                void setOnStopRecordingCallback(const OnStopRecordingAcknowledgmentCallback &callback);
+                void setOnStopRecordingAcknowledgedCallback(const OnStopRecordingAcknowledgmentCallback &callback);
 
                 /**
                  * Lifecycle event callbacks
