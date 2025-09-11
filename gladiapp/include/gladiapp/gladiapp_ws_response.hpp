@@ -528,7 +528,26 @@ namespace gladiapp
                         std::vector<std::string> messages;
                         std::optional<Transcription> transcription;
 
-                        // TODO: add translation support
+                        struct TranslationResult {
+                            bool success;
+                            bool is_empty;
+                            double exec_time;
+                            std::optional<Error> error;
+                            struct Result {
+                                std::optional<Error> error;
+                                std::string full_transcript;
+                                std::vector<std::string> languages;
+                                std::vector<Utterance> utterances;
+                                std::optional<std::vector<Sentence>> sentences;
+                                std::optional<std::vector<Subtitle>> subtitles;
+
+                                static Result fromJson(const nlohmann::json &json);
+                            };
+                            std::optional<std::vector<Result>> results;
+
+                            static TranslationResult fromJson(const nlohmann::json &json);
+                        };
+                        std::optional<TranslationResult> translation;
 
                         std::optional<Transcription::SummarizationResult> summarization;
                         std::optional<Transcription::ModerationResult> moderation;
