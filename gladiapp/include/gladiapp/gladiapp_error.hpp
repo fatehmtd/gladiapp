@@ -24,6 +24,8 @@ namespace gladiapp
                 std::string message;
                 std::vector<std::string> validation_errors;
 
+                void reset();
+
                 static TranscriptionError fromJson(const std::string &jsonString);
 
                 std::string toString() const;

@@ -61,7 +61,6 @@ namespace gladiapp
                 std::string toString() const;
             };
 
-            
             /**
              * Represents an error that occurs during sentence processing.
              * Contains information about the error's status code, exception type, and message.
@@ -75,6 +74,38 @@ namespace gladiapp
                 static SentenceError fromJson(const std::string &jsonString);
 
                 std::string toString() const;
+            };
+
+            /**
+             * Represents a file to be transcribed.
+             * Contains information about the file's ID and filename.
+             * Additionally, it includes the file's source, duration, and number of channels.
+             */
+            struct GLADIAPP_EXPORT TranscriptionFile
+            {
+                std::string id;
+                std::string filename;
+                std::string source;
+                double duration;
+                int number_of_channels;
+
+                static TranscriptionFile fromJson(const std::string &jsonString);
+
+                std::string toString() const;
+            };
+
+            /**
+             * Represents the metadata for a transcription result.
+             * Contains information about the audio duration and number of distinct channels.
+             */
+            struct GLADIAPP_EXPORT Metadata
+            {
+                double audio_duration;
+                int number_of_distinct_channels;
+                double billing_time;
+                double transcription_time;
+
+                static Metadata fromJson(const std::string &jsonString);
             };
 
             /**
@@ -92,24 +123,7 @@ namespace gladiapp
                 std::string kind;
                 std::optional<std::string> completed_at;
                 std::optional<int> error_code;
-                
-                /**
-                 * Represents a file to be transcribed.
-                 * Contains information about the file's ID and filename.
-                 * Additionally, it includes the file's source, duration, and number of channels.
-                 */
-                struct TranscriptionFile
-                {
-                    std::string id;
-                    std::string filename;
-                    std::string source;
-                    double duration;
-                    int number_of_channels;
 
-                    static TranscriptionFile fromJson(const std::string &jsonString);
-
-                    std::string toString() const;
-                };                
                 std::optional<TranscriptionFile> file;
                 std::string request_params;
 
@@ -119,19 +133,6 @@ namespace gladiapp
                  */
                 struct TranscriptionObject
                 {
-                    /**
-                     * Represents the metadata for a transcription result.
-                     * Contains information about the audio duration and number of distinct channels.
-                     */
-                    struct Metadata
-                    {
-                        double audio_duration;
-                        int number_of_distinct_channels;
-                        double billing_time;
-                        double transcription_time;
-
-                        static Metadata fromJson(const std::string &jsonString);
-                    };
                     Metadata metadata;
 
                     /**
@@ -215,6 +216,6 @@ namespace gladiapp
                 std::vector<TranscriptionResult> items;
                 static TranscriptionListResults fromJson(const std::string &jsonString);
             };
-        }        
+        }
     }
 }

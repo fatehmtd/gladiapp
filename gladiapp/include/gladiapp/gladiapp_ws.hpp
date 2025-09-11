@@ -75,7 +75,19 @@ namespace gladiapp
                 ~GladiaWebsocketClient();
 
                 GladiaWebsocketClientSession *connect(const request::InitializeSessionRequest &initRequest,
-                                                      gladiapp::v2::response::TranscriptionError *error = nullptr);
+                                                      gladiapp::v2::response::TranscriptionError *error = nullptr) const;
+
+                /**
+                 * Retrieves the transcription result by ID.
+                 */
+                response::LiveTranscriptionResult getResult(const std::string &id,
+                                                  gladiapp::v2::response::TranscriptionError *transcriptionError = nullptr) const;
+
+                /**
+                 * Deletes the transcription result by ID.
+                 */
+                bool deleteResult(const std::string &id,
+                                  gladiapp::v2::response::TranscriptionError *transcriptionError = nullptr) const;
 
             private:
                 std::unique_ptr<GladiaWebsocketClientImpl> _wsClientImpl;
@@ -94,8 +106,13 @@ namespace gladiapp
                 GladiaWebsocketClientSession(const GladiaWebsocketClientSession &) = delete;
                 GladiaWebsocketClientSession &operator=(const GladiaWebsocketClientSession &) = delete;
 
-                GladiaWebsocketClientSession(const std::string &url);
+                GladiaWebsocketClientSession(const response::InitializeSessionResponse &initResponse);
                 ~GladiaWebsocketClientSession();
+
+                /**
+                 * Gets the session information (ID and URL).
+                 */
+                response::InitializeSessionResponse getSessionInfo() const;
 
                 /**
                  * Connects to the WebSocket server and starts the session and the data reception thread.
@@ -226,6 +243,8 @@ namespace gladiapp
 
                 // Process incoming WebSocket messages
                 void processDataMessage(const std::string &message) const;
+
+                response::InitializeSessionResponse _sessionInfo;
             };
         }
     }

@@ -3,6 +3,16 @@
 
 using namespace gladiapp::v2::response;
 
+void gladiapp::v2::response::TranscriptionError::reset()
+{
+    timestamp.clear();
+    path.clear();
+    request_id.clear();
+    status_code = 0;
+    message.clear();
+    validation_errors.clear();
+}
+
 // TranscriptionError implementations
 TranscriptionError TranscriptionError::fromJson(const std::string &jsonString)
 {

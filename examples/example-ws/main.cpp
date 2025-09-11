@@ -52,7 +52,7 @@ int main(int ac, char **av)
     translationConfig.model = request::InitializeSessionRequest::RealtimeProcessing::TranslationConfig::Model::ENHANCED;
     translationConfig.target_languages = {"fr", "es"};
     translationConfig.lipsync = false;
-    translationConfig.informal = true;
+    translationConfig.informal = false;
     realtimeProcessing.translation_config = translationConfig;
     initRequest.realtime_processing = realtimeProcessing;
     realtimeProcessing.named_entity_recognition = true;
@@ -60,6 +60,7 @@ int main(int ac, char **av)
     // Post processing, Summarization
     request::InitializeSessionRequest::PostProcessing postProcessing;
     postProcessing.summarization = true;
+    postProcessing.chapterization = true;
     request::InitializeSessionRequest::PostProcessing::SummarizationConfig summarizationConfig;
     summarizationConfig.type = request::InitializeSessionRequest::PostProcessing::SummarizationConfig::Type::GENERAL;
     postProcessing.summarization_config = summarizationConfig;
@@ -75,7 +76,7 @@ int main(int ac, char **av)
     messagesConfig.receive_pre_processing_events = true;
     messagesConfig.receive_realtime_processing_events = true;
     messagesConfig.receive_post_processing_events = true;
-    messagesConfig.receive_acknowledgments = false;
+    messagesConfig.receive_acknowledgments = true;
     initRequest.messages_config = messagesConfig;
 
     auto session = std::unique_ptr<GladiaWebsocketClientSession>(client.connect(initRequest, &error));
@@ -97,36 +98,33 @@ int main(int ac, char **av)
         bool waitForCompletion = true;
         spdlog::info("WebSocket session started successfully.");
 
-        session->setOnConnectedCallback([]() {
-            spdlog::info("WebSocket connected callback triggered.");
-        });
-        session->setOnDisconnectedCallback([&waitForCompletion]() {
+        session->setOnConnectedCallback([]()
+                                        { spdlog::info("WebSocket connected callback triggered."); });
+        session->setOnDisconnectedCallback([&waitForCompletion]()
+                                           {
             spdlog::info("WebSocket disconnected callback triggered.");
-            waitForCompletion = false;
-        });
+            waitForCompletion = false; });
 
-        session->setOnSpeechStartedCallback([](const response::SpeechEvent &event) {
-            spdlog::info("Callback - Speech Started Event: Session ID: {}, Time: {}, Channel: {}",
-                         event.session_id, event.data.time, event.data.channel);
-        });
-        session->setOnSpeechEndedCallback([](const response::SpeechEvent &event) {
-            spdlog::info("Callback - Speech Ended Event: Session ID: {}, Time: {}, Channel: {}",
-                         event.session_id, event.data.time, event.data.channel);
-        });
-        session->setOnTranscriptCallback([](const response::Transcript &transcript) {
-            spdlog::info("Callback - Transcript: Session ID: {}, Is Final: {}, Text: {}, Confidence: {}",
-                         transcript.session_id, transcript.data.is_final, transcript.data.utterance.text, transcript.data.utterance.confidence);
-        });
-        session->setOnTranslationCallback([](const response::Translation &translation) {
+        session->setOnSpeechStartedCallback([](const response::SpeechEvent &event)
+                                            { spdlog::info("Callback - Speech Started Event: Session ID: {}, Time: {}, Channel: {}",
+                                                           event.session_id, event.data.time, event.data.channel); });
+        session->setOnSpeechEndedCallback([](const response::SpeechEvent &event)
+                                          { spdlog::info("Callback - Speech Ended Event: Session ID: {}, Time: {}, Channel: {}",
+                                                         event.session_id, event.data.time, event.data.channel); });
+        session->setOnTranscriptCallback([](const response::Transcript &transcript)
+                                         { spdlog::info("Callback - Transcript: Session ID: {}, Is Final: {}, Text: {}, Confidence: {}",
+                                                        transcript.session_id, transcript.data.is_final, transcript.data.utterance.text, transcript.data.utterance.confidence); });
+        session->setOnTranslationCallback([](const response::Translation &translation)
+                                          {
             if (translation.data.has_value())
             {
                 spdlog::info("Callback - Translation: Session ID: {}, Is Final: {}, Text: {}, Confidence: {}",
                              translation.session_id, translation.data->utterance.text, translation.data->translated_utterance.text);
             } else {
                 spdlog::error("Callback - Translation: Session ID: {}, message: {}.", translation.session_id, translation.error.has_value() ? translation.error->message.value() : "Unknown error");
-            }
-        });
-        session->setOnNamedEntityRecognitionCallback([](const response::NamedEntityRecognition &ner) {
+            } });
+        session->setOnNamedEntityRecognitionCallback([](const response::NamedEntityRecognition &ner)
+                                                     {
             if (ner.data.has_value())
             {
                 spdlog::info("Callback - Named Entity Recognition: Session ID: {}, Number of Results: {}",
@@ -138,21 +136,29 @@ int main(int ac, char **av)
                 }
             } else {
                 spdlog::error("Callback - Named Entity Recognition: Session ID: {}, message: {}.", ner.session_id, ner.error.has_value() ? ner.error->message.value() : "Unknown error");
-            }
-        });
-        session->setOnPostTranscriptCallback([](const response::PostTranscript &postTranscript) {
-            spdlog::info("Callback - Post Transcript: Session ID: {}, Full Transcript: {}",
-                         postTranscript.session_id, postTranscript.data.full_transcript);
-        });
-        session->setOnFinalTranscriptCallback([](const response::FinalTranscript &finalTranscript) {
+            } });
+        session->setOnPostTranscriptCallback([](const response::PostTranscript &postTranscript)
+                                             { spdlog::info("Callback - Post Transcript: Session ID: {}, Full Transcript: {}",
+                                                            postTranscript.session_id, postTranscript.data.full_transcript); });
+        session->setOnFinalTranscriptCallback([](const response::FinalTranscript &finalTranscript)
+                                              {
             if (finalTranscript.data.transcription.has_value())
             {
+                const auto &transcription = finalTranscript.data.transcription;
                 spdlog::info("Callback - Final Transcript: Session ID: {}, Text: {}, Languages: {}",
-                             finalTranscript.session_id, finalTranscript.data.transcription->full_transcript, finalTranscript.data.transcription->languages.size());
+                             finalTranscript.session_id, transcription->full_transcript, transcription->languages.size());
+
+                for (const auto &utterance : transcription->utterances) {
+                    spdlog::info(" - Utterance: Text: {}, Start: {}, End: {}, ",
+                                 utterance.text, utterance.start, utterance.end);
+                    for(const auto &word : utterance.words) {
+                        spdlog::info("  >>> Word: Text: {}, Start: {}, End: {}, Confidence: {}",
+                                    word.word, word.start, word.end, word.confidence);
+                    }
+                }
             } else {
                 spdlog::error("Callback - Final Transcript: Session ID: {}, message: {}.", finalTranscript.session_id, finalTranscript.error.has_value() ? finalTranscript.error->message.value() : "Unknown error");
-            }
-        });
+            } });
 
         // Send audio data in chunks
         size_t chunkSize = 3200 * 15; // e.g., 100ms of audio
@@ -170,17 +176,50 @@ int main(int ac, char **av)
         }
         spdlog::info("Finished sending audio data. Waiting for processing to complete...");
         spdlog::info("Sending stop signal to indicate end of audio stream.");
-        session->sendStopSignal();    
-        
+        session->sendStopSignal();
+
         // wait for processing
-        while(waitForCompletion) {
+        while (waitForCompletion)
+        {
             std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+
+        int waitDurationInSeconds = 5;
+        spdlog::info("Processing completed. Retrieving and deleting transcription result..., waiting {} seconds before retrieval.", waitDurationInSeconds);
+        std::this_thread::sleep_for(std::chrono::seconds(waitDurationInSeconds));
+
+        spdlog::info("Retrieving transcription result for session ID: {}", session->getSessionInfo().id);
+        error.reset();
+        auto result = client.getResult(session->getSessionInfo().id, &error);
+        if (error.status_code != 0)
+        {
+            spdlog::error("Error occurred while retrieving result: {}", error.toString());
+        }
+        else
+        {
+            spdlog::info("Successfully retrieved transcription result. contains transcription: {}", result.result.transcription.has_value() ? "yes" : "no");
+            spdlog::info("metadata: audio_duration: {}, number_of_distinct_channels: {}, billing_time: {}, transcription_time: {}",
+                         result.result.metadata.audio_duration,
+                         result.result.metadata.number_of_distinct_channels,
+                         result.result.metadata.billing_time,
+                         result.result.metadata.transcription_time);
+        }
+
+        spdlog::info("Deleting transcription result for session ID: {}", session->getSessionInfo().id);
+        error.reset();
+        client.deleteResult(session->getSessionInfo().id, &error);
+        if (error.status_code != 0)
+        {
+            spdlog::error("Error occurred while deleting result: {}", error.toString());
+        }
+        else
+        {
+            spdlog::info("Successfully deleted transcription result for session ID: {}", session->getSessionInfo().id);
         }
     }
     else
     {
         spdlog::error("Failed to connect and start WebSocket session.");
     }
-
     return 0;
 }

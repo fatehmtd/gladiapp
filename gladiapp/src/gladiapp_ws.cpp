@@ -23,21 +23,41 @@ gladiapp::v2::ws::GladiaWebsocketClient::~GladiaWebsocketClient()
 }
 
 GladiaWebsocketClientSession *gladiapp::v2::ws::GladiaWebsocketClient::connect(const request::InitializeSessionRequest &initRequest,
-                                                                               gladiapp::v2::response::TranscriptionError *error)
+                                                                               gladiapp::v2::response::TranscriptionError *error) const
 {
     auto initSessionResponse = _wsClientImpl->connect(initRequest, error);
     if (error != nullptr && error->status_code != 0)
     {
         return nullptr;
     }
-    return new GladiaWebsocketClientSession(initSessionResponse.url);
+    return new GladiaWebsocketClientSession(initSessionResponse);
+}
+
+response::LiveTranscriptionResult gladiapp::v2::ws::GladiaWebsocketClient::getResult(const std::string &id,
+                                                                       gladiapp::v2::response::TranscriptionError *transcriptionError) const
+{
+    nlohmann::json outputJson;
+    if (_wsClientImpl->getResultById(id, outputJson, transcriptionError))
+    {
+        return response::LiveTranscriptionResult::fromJson(outputJson);
+    }
+    else
+    {
+        return response::LiveTranscriptionResult();
+    }
+}
+
+bool gladiapp::v2::ws::GladiaWebsocketClient::deleteResult(const std::string &id, gladiapp::v2::response::TranscriptionError *transcriptionError) const
+{
+    return _wsClientImpl->deleteResultById(id, transcriptionError);
 }
 
 /**************************************************************************************************************************************
  * GladiaWebsocketClientSession
  **************************************************************************************************************************************/
 
-gladiapp::v2::ws::GladiaWebsocketClientSession::GladiaWebsocketClientSession(const std::string &url) : _wsClientSessionImpl(std::make_unique<GladiaWebsocketClientSessionImpl>(url))
+gladiapp::v2::ws::GladiaWebsocketClientSession::GladiaWebsocketClientSession(const response::InitializeSessionResponse &initResponse) : _wsClientSessionImpl(std::make_unique<GladiaWebsocketClientSessionImpl>(initResponse.url)),
+                                                                                                                                        _sessionInfo(initResponse)
 {
 }
 
@@ -45,6 +65,11 @@ gladiapp::v2::ws::GladiaWebsocketClientSession::~GladiaWebsocketClientSession()
 {
     sendStopSignal();
     disconnect();
+}
+
+InitializeSessionResponse gladiapp::v2::ws::GladiaWebsocketClientSession::getSessionInfo() const
+{
+    return _sessionInfo;
 }
 
 bool gladiapp::v2::ws::GladiaWebsocketClientSession::connectAndStart()
@@ -87,8 +112,6 @@ void gladiapp::v2::ws::GladiaWebsocketClientSession::processDataMessage(const st
         if (json.contains("type"))
         {
             std::string type = json["type"];
-            spdlog::info("Message type: {}", type);
-
             // Acknowledgment events
             if (type == events::AUDIO_CHUNK)
             {
