@@ -347,7 +347,7 @@ void gladiapp::v2::ws::GladiaWebsocketClientSession::setOnAudioChunkAcknowledged
     _onAudioChunkAcknowledgedCallback = callback;
 }
 
-void gladiapp::v2::ws::GladiaWebsocketClientSession::setOnStopRecordingCallback(const OnStopRecordingAcknowledgmentCallback &callback)
+void gladiapp::v2::ws::GladiaWebsocketClientSession::setOnStopRecordingAcknowledgedCallback(const OnStopRecordingAcknowledgmentCallback &callback)
 {
     _onStopRecordingAcknowledgmentCallback = callback;
 }

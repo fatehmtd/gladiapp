@@ -2,6 +2,7 @@
 #include <spdlog/spdlog.h>
 #include <future>
 #include <fstream>
+#include <sstream>
 #include <gladiapp/gladiapp_ws.hpp>
 #include <gladiapp/gladiapp_error.hpp>
 
@@ -40,7 +41,7 @@ int main(int ac, char **av)
     initRequest.region = request::InitializeSessionRequest::Region::US_WEST;
     initRequest.sample_rate = request::InitializeSessionRequest::SampleRate::SAMPLE_RATE_16000;
     initRequest.model = request::InitializeSessionRequest::Model::SOLARIA_1;
-    initRequest.endpointing = 0.15;
+    initRequest.endpointing = 0.6;
     initRequest.maximum_duration_without_endpointing = 60;
 
     // Realtime processing
@@ -49,8 +50,8 @@ int main(int ac, char **av)
     // Translation
     realtimeProcessing.translation = true;
     request::InitializeSessionRequest::RealtimeProcessing::TranslationConfig translationConfig;
-    translationConfig.model = request::InitializeSessionRequest::RealtimeProcessing::TranslationConfig::Model::ENHANCED;
-    translationConfig.target_languages = {"fr", "es"};
+    translationConfig.model = request::InitializeSessionRequest::RealtimeProcessing::TranslationConfig::Model::BASE;
+    translationConfig.target_languages = {"fr", "es", "de", "jp"};
     translationConfig.lipsync = false;
     translationConfig.informal = false;
     realtimeProcessing.translation_config = translationConfig;
@@ -105,6 +106,44 @@ int main(int ac, char **av)
             spdlog::info("WebSocket disconnected callback triggered.");
             waitForCompletion = false; });
 
+        session->setOnAudioChunkAcknowledgedCallback([](const response::AudioChunkAcknowledgment &audioChunkAck)
+                                                    {
+                                                         if(audioChunkAck.error.has_value()) {
+                                                            spdlog::error("Callback - Audio Chunk Acknowledgment: Session ID: {}, Acknowledged: {}, message: {}.",
+                                                                         audioChunkAck.session_id, audioChunkAck.acknowledged, audioChunkAck.error->message.value());
+                                                         } else {
+                                                            std::ostringstream byteRangeStream;
+                                                            if(audioChunkAck.data->byte_range.size() == 2) {
+                                                                byteRangeStream << audioChunkAck.data->byte_range[0] << "-" << audioChunkAck.data->byte_range[1];
+                                                            } else {
+                                                                byteRangeStream << "N/A";
+                                                            }
+                                                            std::ostringstream timeRangeStream;
+                                                            if(audioChunkAck.data->time_range.size() == 2) {
+                                                                timeRangeStream << audioChunkAck.data->time_range[0] << "-" << audioChunkAck.data->time_range[1];
+                                                            } else {
+                                                                timeRangeStream << "N/A";
+                                                            }
+                                                            spdlog::info("Callback - Audio Chunk Acknowledgment: Session ID: {}, Acknowledged: {}, Byte range: {}, Time range: {},",
+                                                                         audioChunkAck.session_id,
+                                                                          audioChunkAck.acknowledged,
+                                                                           byteRangeStream.str(), timeRangeStream.str());
+                                                         }
+                                                        });
+        session->setOnStopRecordingAcknowledgedCallback([](const response::StopRecordingAcknowledgment &stopRecordingAck)
+                                                       {
+                                                            if(stopRecordingAck.error.has_value()) {
+                                                                spdlog::error("Callback - Stop Recording Acknowledgment: Session ID: {}, Acknowledged: {}, message: {}.",
+                                                                             stopRecordingAck.session_id, stopRecordingAck.acknowledged, stopRecordingAck.error->message.value());
+                                                            } else {
+                                                                spdlog::info("Callback - Stop Recording Acknowledgment: Session ID: {}, Acknowledged: {}, Recording duration: {}, Left to process: {}",
+                                                                             stopRecordingAck.session_id,
+                                                                              stopRecordingAck.acknowledged,
+                                                                               stopRecordingAck.data->recording_duration,
+                                                                                stopRecordingAck.data->recording_left_to_process);
+                                                            }
+                                                        });
+
         session->setOnSpeechStartedCallback([](const response::SpeechEvent &event)
                                             { spdlog::info("Callback - Speech Started Event: Session ID: {}, Time: {}, Channel: {}",
                                                            event.session_id, event.data.time, event.data.channel); });
@@ -145,15 +184,19 @@ int main(int ac, char **av)
             if (finalTranscript.data.transcription.has_value())
             {
                 const auto &transcription = finalTranscript.data.transcription;
+                std::ostringstream languagesStream;
+                for (const auto &language : transcription->languages) {
+                    languagesStream << language << ", ";
+                }                
                 spdlog::info("Callback - Final Transcript: Session ID: {}, Text: {}, Languages: {}",
-                             finalTranscript.session_id, transcription->full_transcript, transcription->languages.size());
+                             finalTranscript.session_id, transcription->full_transcript, languagesStream.str());
 
                 for (const auto &utterance : transcription->utterances) {
-                    spdlog::info(" - Utterance: Text: {}, Start: {}, End: {}, ",
-                                 utterance.text, utterance.start, utterance.end);
+                    spdlog::info(" - Utterance: Text: {}, Start: {}, End: {}, Duration: {}, Confidence: {}",
+                                 utterance.text, utterance.start, utterance.end, utterance.end - utterance.start, utterance.confidence);
                     for(const auto &word : utterance.words) {
-                        spdlog::info("  >>> Word: Text: {}, Start: {}, End: {}, Confidence: {}",
-                                    word.word, word.start, word.end, word.confidence);
+                        spdlog::info("   > Word: Text: {}, Start: {}, End: {}, Duration: {}, Confidence: {}",
+                                    word.word, word.start, word.end, word.end - word.start, word.confidence);
                     }
                 }
             } else {
@@ -161,7 +204,7 @@ int main(int ac, char **av)
             } });
 
         // Send audio data in chunks
-        size_t chunkSize = 3200 * 15; // e.g., 100ms of audio
+        constexpr size_t chunkSize = 8000; // e.g., (16khz * 2 bytes / 4) 250ms of audio
         spdlog::info("Sending audio data in chunks of {} bytes...", chunkSize);
         // Simulate real-time sending by adding a small delay between chunks
         for (size_t offset = 0; offset < audioData.size(); offset += chunkSize)
@@ -184,7 +227,7 @@ int main(int ac, char **av)
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
 
-        int waitDurationInSeconds = 5;
+        constexpr int waitDurationInSeconds = 5;
         spdlog::info("Processing completed. Retrieving and deleting transcription result..., waiting {} seconds before retrieval.", waitDurationInSeconds);
         std::this_thread::sleep_for(std::chrono::seconds(waitDurationInSeconds));
 
@@ -194,6 +237,7 @@ int main(int ac, char **av)
         if (error.status_code != 0)
         {
             spdlog::error("Error occurred while retrieving result: {}", error.toString());
+            return -1;
         }
         else
         {
@@ -211,6 +255,7 @@ int main(int ac, char **av)
         if (error.status_code != 0)
         {
             spdlog::error("Error occurred while deleting result: {}", error.toString());
+            return -1;
         }
         else
         {
