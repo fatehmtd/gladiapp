@@ -89,6 +89,8 @@ namespace gladiapp
                         bool code_switching = false;
 
                         nlohmann::json toJson() const;
+
+                        static LanguageConfig fromJson(const nlohmann::json &json);
                     };
                     std::optional<LanguageConfig> language_config;
 
@@ -104,6 +106,8 @@ namespace gladiapp
                         double speech_threshold = 0.6;
 
                         nlohmann::json toJson() const;
+
+                        static PreProcessing fromJson(const nlohmann::json &json);
                     };
                     std::optional<PreProcessing> pre_processing;
 
@@ -128,12 +132,16 @@ namespace gladiapp
                                 double intensity;
                                 std::vector<std::string> pronunciations;
                                 std::string language;
-
+                                
                                 nlohmann::json toJson() const;
+
+                                static Vocabulary fromJson(const nlohmann::json &json);
                             };
                             std::optional<std::vector<Vocabulary>> vocabulary;
                             std::optional<double> default_intensity = 0.5;
                             nlohmann::json toJson() const;
+
+                            static CustomVocabularyConfig fromJson(const nlohmann::json &json);
                         };
                         std::optional<CustomVocabularyConfig> custom_vocabulary_config;
 
@@ -150,6 +158,8 @@ namespace gladiapp
                             std::unordered_map<std::string, std::vector<std::string>> spelling_dictionary;
 
                             nlohmann::json toJson() const;
+
+                            static CustomSpellingConfig fromJson(const nlohmann::json &json);
                         };
                         std::optional<CustomSpellingConfig> custom_spelling_config;
 
@@ -192,6 +202,8 @@ namespace gladiapp
                             std::optional<bool> informal = false;
 
                             nlohmann::json toJson() const;
+
+                            static TranslationConfig fromJson(const nlohmann::json &json);
                         };
                         TranslationConfig translation_config;
 
@@ -205,6 +217,8 @@ namespace gladiapp
                          */
                         std::optional<bool> sentiment_analysis = false;
                         nlohmann::json toJson() const;
+
+                        static RealtimeProcessing fromJson(const nlohmann::json &json);
                     };
                     std::optional<RealtimeProcessing> realtime_processing;
 
@@ -228,12 +242,16 @@ namespace gladiapp
                             Type type;
 
                             nlohmann::json toJson() const;
+
+                            static SummarizationConfig fromJson(const nlohmann::json &json);
                         };
                         std::optional<SummarizationConfig> summarization_config;
 
                         std::optional<bool> chapterization = false;
 
                         nlohmann::json toJson() const;
+
+                        static PostProcessing fromJson(const nlohmann::json &json);
                     };
                     std::optional<PostProcessing> post_processing;
 
@@ -253,6 +271,8 @@ namespace gladiapp
                         std::optional<bool> receive_lifecycle_events = true;
 
                         nlohmann::json toJson() const;
+
+                        static MessagesConfig fromJson(const nlohmann::json &json);
                     };
                     std::optional<MessagesConfig> messages_config;
 
@@ -269,15 +289,19 @@ namespace gladiapp
                         std::optional<bool> receive_pre_processing_events = true;
                         std::optional<bool> receive_realtime_processing_events = true;
                         std::optional<bool> receive_post_processing_events = true;
-                        std::optional<bool> receive_acknowledgements = false;
+                        std::optional<bool> receive_acknowledgments = false;
                         std::optional<bool> receive_errors = false;
                         std::optional<bool> receive_lifecycle_events = true;
 
                         nlohmann::json toJson() const;
+
+                        static CallbackConfig fromJson(const nlohmann::json &json);
                     };
                     std::optional<CallbackConfig> callback_config;
 
                     nlohmann::json toJson() const;
+
+                    static InitializeSessionRequest fromJson(const nlohmann::json &json);
                 };
             }
         }

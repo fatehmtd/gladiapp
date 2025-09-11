@@ -153,7 +153,7 @@ namespace gladiapp::v2::ws
                 http::response<http::string_body> httpResponse;
                 http::read(sslStream, responseBuffer, httpResponse);
                 if(httpResponse.result() != http::status::ok) {
-                    spdlog::error("Error getting session result: {}", httpResponse.body());
+                    spdlog::error("Error getting live transcription session result: {}", httpResponse.body());
                     if (transcriptionError != nullptr)
                     {
                         *transcriptionError = TranscriptionError::fromJson(httpResponse.body());

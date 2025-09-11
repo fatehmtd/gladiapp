@@ -90,7 +90,7 @@ namespace gladiapp
             }
 
             // TranscriptionFile implementations
-            TranscriptionResult::TranscriptionFile TranscriptionResult::TranscriptionFile::fromJson(const std::string &jsonString)
+            TranscriptionFile TranscriptionFile::fromJson(const std::string &jsonString)
             {
                 TranscriptionFile file;
                 auto json = nlohmann::json::parse(jsonString);
@@ -101,13 +101,19 @@ namespace gladiapp
                 {
                     file.source = json.value("source", "");
                 }
-                file.duration = json.value("duration", 0.0);
+                if(json.contains("duration") && json["duration"].is_number()) {
+                    file.duration = json.value("duration", 0.0);
+                } else if(json.contains("audio_duration") && json["audio_duration"].is_number()) {
+                    file.duration = json.value("audio_duration", 0.0);
+                } else {
+                    file.duration = 0.0;
+                }
                 file.number_of_channels = json.value("number_of_channels", 0);
 
                 return file;
             }
 
-            std::string TranscriptionResult::TranscriptionFile::toString() const
+            std::string TranscriptionFile::toString() const
             {
                 nlohmann::json j;
                 j["id"] = id;
@@ -245,7 +251,7 @@ namespace gladiapp
             }
 
             // Metadata implementations
-            TranscriptionResult::TranscriptionObject::Metadata TranscriptionResult::TranscriptionObject::Metadata::fromJson(const std::string &jsonString)
+            Metadata Metadata::fromJson(const std::string &jsonString)
             {
                 Metadata metadata;
                 auto json = nlohmann::json::parse(jsonString);
