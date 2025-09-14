@@ -6,21 +6,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# fetch SPDLOG for logging
-FetchContent_Declare(
-    spdlog
-    GIT_REPOSITORY https://github.com/gabime/spdlog.git
-    GIT_TAG "v1.15.0"
-)
-FetchContent_MakeAvailable(spdlog)
-
-# fetch nlohmann for json
-FetchContent_Declare(
-    nlohmann_json
-    GIT_REPOSITORY https://github.com/nlohmann/json.git
-    GIT_TAG "v3.12.0"
-)
-FetchContent_MakeAvailable(nlohmann_json)
+# Use vcpkg packages for spdlog and nlohmann-json
+find_package(spdlog REQUIRED CONFIG)
+find_package(nlohmann_json REQUIRED CONFIG)
 
 add_executable(gladiapp_rest_example main.cpp)
 

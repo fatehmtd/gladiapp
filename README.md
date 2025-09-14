@@ -42,34 +42,52 @@ This is a **community-driven project** and is **not affiliated with Gladia in an
 - **OpenSSL**
 - **Internet connection** for API calls
 
-### Dependencies (automatically fetched)
+### Dependencies (managed by vcpkg.json)
 
-- [nlohmann/json](https://github.com/nlohmann/json) - JSON parsing
-- [spdlog](https://github.com/gabime/spdlog) - Logging
-- [base64](https://github.com/tobiaslocker/base64) - Base64 encoding/decoding
+The project uses a `vcpkg.json` manifest file for dependency management:
+
+- **[Boost](https://www.boost.org/)** (system, thread, beast) - Networking and HTTP client
+- **[OpenSSL](https://www.openssl.org/)** - SSL/TLS support
+- **[nlohmann/json](https://github.com/nlohmann/json)** - JSON parsing
+- **[spdlog](https://github.com/gabime/spdlog)** - Logging
+- **[base64](https://github.com/tobiaslocker/base64)** - Base64 encoding/decoding (fetched via CMake)
 
 ## Installation
 
-### Using CMake
+> 🎉 **New!** This project now uses a `vcpkg.json` manifest file for automatic dependency management. All required dependencies (Boost, OpenSSL, spdlog, nlohmann-json) are automatically installed when you configure the project with vcpkg.
 
-1. Clone the repository:
+### Using CMake with vcpkg
+
+1. **Install vcpkg** (if you haven't already):
+
+```bash
+git clone https://github.com/Microsoft/vcpkg.git
+cd vcpkg
+./bootstrap-vcpkg.sh  # On Windows: .\bootstrap-vcpkg.bat
+```
+
+2. **Clone and build the project**:
 
 ```bash
 git clone https://github.com/fatehmtd/gladiapp.git
 cd gladiapp
-```
-
-2. Create a build directory:
-
-```bash
 mkdir build && cd build
 ```
 
-3. Configure and build:
+3. **Configure with vcpkg** (dependencies installed automatically via vcpkg.json):
 
 ```bash
-cmake ..
-make
+# Linux/macOS
+cmake .. -DCMAKE_TOOLCHAIN_FILE=/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake
+
+# Windows
+cmake .. -DCMAKE_TOOLCHAIN_FILE=C:\path\to\vcpkg\scripts\buildsystems\vcpkg.cmake
+```
+
+4. **Build**:
+
+```bash
+cmake --build .
 ```
 
 ### System Dependencies
@@ -96,14 +114,24 @@ sudo yum install boost-devel openssl-devel cmake gcc-c++
 
 **Using vcpkg (Recommended):**
 
+The project includes a `vcpkg.json` manifest file that automatically manages all dependencies.
+
 ```powershell
 # Install vcpkg if you haven't already
 git clone https://github.com/Microsoft/vcpkg.git
 cd vcpkg
 .\bootstrap-vcpkg.bat
 
-# Install dependencies
-.\vcpkg install boost openssl cmake
+# Clone and build the project
+git clone https://github.com/fatehmtd/gladiapp.git
+cd gladiapp
+mkdir build && cd build
+
+# Configure with vcpkg toolchain (dependencies installed automatically)
+cmake .. -DCMAKE_TOOLCHAIN_FILE=path\to\vcpkg\scripts\buildsystems\vcpkg.cmake
+
+# Build the project
+cmake --build . --config Release
 ```
 
 **Using Visual Studio:**
@@ -111,6 +139,7 @@ cd vcpkg
 - Install Visual Studio 2019/2022 with C++ development tools
 - Use vcpkg integration: `.\vcpkg integrate install`
 - Open the project with CMake support in Visual Studio
+- Dependencies will be automatically installed via `vcpkg.json`
 
 **Using Visual Studio Code:**
 
@@ -119,19 +148,11 @@ cd vcpkg
   - C/C++ Extension Pack
   - CMake Tools
   - CMake Language Support
-- Install dependencies via vcpkg or Chocolatey (see above)
 - Open the project folder in VS Code
-- Configure CMake kit when prompted
+- Configure CMake kit when prompted and specify vcpkg toolchain
+- Dependencies will be automatically installed via `vcpkg.json`
 - Use Ctrl+Shift+P → "CMake: Configure" to configure the project
 - Use Ctrl+Shift+P → "CMake: Build" to build the project
-
-**Build on Windows:**
-
-```powershell
-mkdir build && cd build
-cmake .. -DCMAKE_TOOLCHAIN_FILE=path/to/vcpkg/scripts/buildsystems/vcpkg.cmake
-cmake --build . --config Release
-```
 
 ## Quick Start
 
@@ -624,7 +645,7 @@ We welcome contributions! This is a community-driven project, and we appreciate 
 
 - [ ] **Developer Experience**
   - [ ] CMake package configuration
-  - [ ] vcpkg package support
+  - [x] **vcpkg package support** ✅ (Complete - using vcpkg.json manifest)
   - [ ] Conan package support
   - [ ] Pre-built binaries for common platforms
 

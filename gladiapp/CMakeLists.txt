@@ -9,14 +9,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 include(FetchContent)
 include(GNUInstallDirs)
 
-if(WIN32)
-    find_package(boost_system REQUIRED CONFIG)
-    find_package(boost_thread REQUIRED CONFIG)
-    find_package(boost_beast REQUIRED CONFIG)
-else()
-    find_package(Boost REQUIRED COMPONENTS system thread)
-endif()
+find_package(Boost REQUIRED COMPONENTS system thread)
 find_package(OpenSSL REQUIRED)
+
+if(NOT Boost_FOUND)
+    message(FATAL_ERROR "Boost not found. Please install Boost or set BOOST_ROOT.")
+endif()
 
 # Debug: Print Boost information
 message(STATUS "Boost_FOUND: ${Boost_FOUND}")
@@ -28,21 +26,9 @@ if(NOT OpenSSL_FOUND)
     message(FATAL_ERROR "OpenSSL not found. Please install OpenSSL or set OPENSSL_ROOT_DIR.")
 endif()
 
-# fetch SPDLOG for logging
-FetchContent_Declare(
-    spdlog
-    GIT_REPOSITORY https://github.com/gabime/spdlog.git
-    GIT_TAG "v1.15.0"
-)
-FetchContent_MakeAvailable(spdlog)
-
-# fetch nlohmann for json
-FetchContent_Declare(
-    nlohmann_json
-    GIT_REPOSITORY https://github.com/nlohmann/json.git
-    GIT_TAG "v3.12.0"
-)
-FetchContent_MakeAvailable(nlohmann_json)
+# Use vcpkg packages for spdlog and nlohmann-json
+find_package(spdlog REQUIRED CONFIG)
+find_package(nlohmann_json REQUIRED CONFIG)
 
 # fetch base64
 set(BASE64_ENABLE_TESTING OFF CACHE BOOL "Disable base64 testing" FORCE)
