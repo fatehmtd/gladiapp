@@ -1,0 +1,14 @@
+{
+  "name": "gladiapp",
+  "version": "1.0.0",
+  "description": "A C++ library for audio processing with REST API and WebSocket support",
+  "homepage": "https://github.com/fatehmtd/gladiapp",
+  "dependencies": [
+    "boost-system",
+    "boost-thread", 
+    "boost-beast",
+    "openssl",
+    "spdlog",
+    "nlohmann-json"
+  ]
+}
