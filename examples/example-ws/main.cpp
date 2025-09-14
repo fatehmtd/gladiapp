@@ -3,10 +3,10 @@
 #include <future>
 #include <fstream>
 #include <sstream>
+#include <cstdlib>
 #include <gladiapp/gladiapp_ws.hpp>
 #include <gladiapp/gladiapp_error.hpp>
-
-constexpr const char *tempApiKey = "a273934e-8ff7-4814-a41a-ba507614743d";
+#include "../common/apiKeyLoader.hpp"
 
 using namespace gladiapp::v2::ws;
 
@@ -27,11 +27,12 @@ std::vector<uint8_t> readWAVFile(const std::string &filePath)
 
 int main(int ac, char **av)
 {
+    std::string apiKey = getApiKey();
     spdlog::info("Reading WAV file...");
     std::vector<uint8_t> audioData = readWAVFile("testing.wav");
     spdlog::info("Read {} bytes of audio data from WAV file.", audioData.size());
     spdlog::info("Starting GladiaWebsocketClient...");
-    gladiapp::v2::ws::GladiaWebsocketClient client(tempApiKey);
+    gladiapp::v2::ws::GladiaWebsocketClient client(apiKey);
 
     gladiapp::v2::response::TranscriptionError error;
     gladiapp::v2::ws::request::InitializeSessionRequest initRequest;

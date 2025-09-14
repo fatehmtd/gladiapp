@@ -35,7 +35,7 @@ namespace gladiapp
              * @param filePath The path to the audio file to upload.
              * @return The response from the server.
              */
-            response::UploadResponse upload(const std::string &filePath) const;
+            response::UploadResponse upload(const std::string &filePath, response::TranscriptionError *transcriptionError) const;
 
             /**
              * Sends a pre-recorded audio url for processing.

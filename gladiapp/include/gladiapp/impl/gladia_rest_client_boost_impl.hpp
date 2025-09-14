@@ -46,7 +46,7 @@ namespace gladiapp
             {
             }
 
-            response::UploadResponse upload(const std::string &filePath) const
+            response::UploadResponse upload(const std::string &filePath, response::TranscriptionError* transcriptionError) const
             {
                 try
                 {
@@ -130,10 +130,11 @@ namespace gladiapp
                     // Throw an exception if the response is not OK
                     if (httpResponse.result() != http::status::ok)
                     {
-                        std::ostringstream oss;
-                        oss << "Upload failed, error code: " << (int)httpResponse.result()
-                            << ", message: " << httpResponse.body();
-                        spdlog::throw_spdlog_ex(oss.str(), (int)httpResponse.result());
+                        if(transcriptionError != nullptr)
+                        {
+                            *transcriptionError = response::TranscriptionError::fromJson(httpResponse.body());
+                            return response::UploadResponse();
+                        }
                     }
                     return response::UploadResponse::fromJson(httpResponse.body());
                 }
