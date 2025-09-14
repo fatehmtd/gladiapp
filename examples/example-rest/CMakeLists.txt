@@ -16,6 +16,7 @@ target_link_libraries(gladiapp_rest_example PRIVATE
     gladiapp
     spdlog::spdlog
     nlohmann_json::nlohmann_json
+    dotenv-cpp
 )
 
 # Copy the testing.wav file to the output directory

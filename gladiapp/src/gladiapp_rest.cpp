@@ -11,9 +11,9 @@ gladiapp::v2::GladiaRestClient::~GladiaRestClient()
 {
 }
 
-response::UploadResponse gladiapp::v2::GladiaRestClient::upload(const std::string &filePath) const
+response::UploadResponse gladiapp::v2::GladiaRestClient::upload(const std::string &filePath, response::TranscriptionError *transcriptionError) const
 {
-    return _restClientImpl->upload(filePath);
+    return _restClientImpl->upload(filePath, transcriptionError);
 }
 
 response::TranscriptionJobResponse gladiapp::v2::GladiaRestClient::preRecorded(const request::TranscriptionRequest &transcriptionRequest,

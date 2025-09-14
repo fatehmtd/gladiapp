@@ -441,36 +441,68 @@ The example includes:
 - **`testing.wav`**: A sample audio file for testing
 - **`CMakeLists.txt`**: Build configuration for the example
 
-#### API Key Note
+#### API Key Setup
 
-⚠️ **Important**: The example uses a temporary API key for demonstration purposes. For production use, you should:
+⚠️ **Important**: For security, API keys should not be hardcoded in source files.
 
-1. **Get your own API key** from [Gladia](https://gladia.io)
-2. **Replace the temporary key** in `main.cpp`:
+The examples use the **dotenv-cpp** library for secure API key management with automatic environment variable support.
 
-```cpp
-// Replace this line
-constexpr const char *tempApiKey = "temporary-demo-key";
+**Quick Setup Options:**
 
-// With your actual API key
-constexpr const char *tempApiKey = "your-actual-api-key";
-```
+**Option 1: .env File (Recommended for Development)**
+1. **Get your API key** from [Gladia](https://gladia.io)
+2. **Create a `.env` file** in the project root:
+   ```env
+   GLADIA_API_KEY=your-actual-api-key-here
+   ```
+3. **Run the examples** - they will automatically load from the `.env` file
 
-3. **Use environment variables** for better security:
+**Option 2: Environment Variable (Recommended for Production)**
+1. **Get your API key** from [Gladia](https://gladia.io)
+2. **Set environment variable:**
 
-```cpp
-#include <cstdlib>
+   **Windows PowerShell:**
+   ```powershell
+   $env:GLADIA_API_KEY="your-actual-api-key-here"
+   ```
 
-int main(int ac, char **av) {
-    const char* apiKey = std::getenv("GLADIA_API_KEY");
-    if (!apiKey) {
-        std::cerr << "Please set GLADIA_API_KEY environment variable" << std::endl;
-        return 1;
-    }
-    
-    gladiapp::v2::GladiaRestClient client(apiKey);
-    // ... rest of the code
-}
+   **Windows Command Prompt:**
+   ```cmd
+   set GLADIA_API_KEY=your-actual-api-key-here
+   ```
+
+   **Linux/macOS:**
+   ```bash
+   export GLADIA_API_KEY="your-actual-api-key-here"
+   ```
+
+3. **Run the examples** - they will automatically use your environment variable
+
+**Priority Order:**
+The examples use this priority when loading API keys:
+1. **Environment variables** (highest priority)
+2. **`.env` file** values
+3. **Demo key fallback** (with warnings - for testing only)
+
+**Features:**
+- ✅ **Automatic loading** - No code changes needed
+- ✅ **Secure by design** - `.env` files are git-ignored
+- ✅ **Fallback support** - Works even without configuration (demo mode)
+- ✅ **Cross-platform** - Works on Windows, macOS, and Linux
+- ✅ **Production ready** - Environment variables take precedence
+
+**For detailed setup instructions, see:** [`API_KEY_SETUP.md`](API_KEY_SETUP.md)
+
+**Example Messages:**
+```bash
+# When API key is found:
+[INFO] API key loaded successfully
+
+# When no API key is configured:
+[WARN] No API key found in .env file or environment variable.
+[WARN] Using demo key. For production:
+[WARN] 1. Create .env file with: GLADIA_API_KEY=your-key
+[WARN] 2. Or set environment: set GLADIA_API_KEY=your-key
 ```
 
 Then run with:

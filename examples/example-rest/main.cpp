@@ -1,27 +1,24 @@
 #include <iostream>
 #include <spdlog/spdlog.h>
 #include <future>
+#include <cstdlib>
 #include <gladiapp/gladiapp_rest.hpp>
-
-constexpr const char *tempApiKey = "a273934e-8ff7-4814-a41a-ba507614743d";
+#include "../common/apiKeyLoader.hpp"
 
 int main(int ac, char **av)
 {
+    std::string apiKey = getApiKey();
     spdlog::info("Starting GladiaRestClient...");
-    gladiapp::v2::GladiaRestClient client(tempApiKey);
+    gladiapp::v2::GladiaRestClient client(apiKey);
 
+    gladiapp::v2::response::TranscriptionError transcriptionError;
     // prepare the async upload
-    std::future<gladiapp::v2::response::UploadResponse> uploadFuture = std::async([&client, av]()
-                                                                                  {
-        try {
-            // Get the directory where the executable is located
-            std::string executableDir = std::filesystem::path(av[0]).parent_path().string();
-            std::string audioFilePath = (std::filesystem::path(executableDir) / "testing.wav").string();
-            return client.upload(audioFilePath);
-        } catch (const std::exception& e) {
-            spdlog::error("Error occurred during upload: {}", e.what());
-            return gladiapp::v2::response::UploadResponse();
-        } });
+    std::future<gladiapp::v2::response::UploadResponse> uploadFuture = std::async([&client, av, &transcriptionError]() {
+        // Get the directory where the executable is located
+        std::string executableDir = std::filesystem::path(av[0]).parent_path().string();
+        std::string audioFilePath = (std::filesystem::path(executableDir) / "testing.wav").string();
+        return client.upload(audioFilePath, &transcriptionError);
+    });
 
     // Do other work here while upload is happening
     spdlog::info("Upload started, doing other work...");
@@ -30,6 +27,22 @@ int main(int ac, char **av)
     {
         // Wait for upload to complete and get result
         gladiapp::v2::response::UploadResponse response = uploadFuture.get();
+        if(transcriptionError.status_code != 0)
+        {
+            spdlog::error("Error occurred during file upload: {}", transcriptionError.message);
+            spdlog::error("Status code: {}", transcriptionError.status_code);
+
+            // If validation_errors is a vector/array, iterate through it
+            if (!transcriptionError.validation_errors.empty())
+            {
+                spdlog::error("Validation errors:");
+                for (const auto &error : transcriptionError.validation_errors)
+                {
+                    spdlog::error("  - {}", error);
+                }
+            }
+            return -1;
+        }
         spdlog::info("Upload complete, response: {}", response.toString());
 
         gladiapp::v2::request::TranscriptionRequest request;
