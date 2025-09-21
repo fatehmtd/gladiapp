@@ -61,6 +61,9 @@ cmake .. -DCMAKE_TOOLCHAIN_FILE=/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake
 
 # Windows
 cmake .. -DCMAKE_TOOLCHAIN_FILE=C:\path\to\vcpkg\scripts\buildsystems\vcpkg.cmake
+
+# Optional: Build with examples
+cmake .. -DCMAKE_TOOLCHAIN_FILE=/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake -DBUILD_EXAMPLES=ON
 ```
 
 4. Build:
@@ -155,15 +158,17 @@ int main() {
 
 **WebSocket**: Use for real-time transcription, live audio streams, or interactive applications requiring immediate feedback.
 
-## Examples
+## Examples (Optional)
 
-Working examples are provided in the `examples/` directory demonstrating both REST API and WebSocket functionality.
+Working examples are provided in the `examples/` directory demonstrating both REST API and WebSocket functionality. Examples are optional and can be built separately from the main library.
 
 ### Building Examples
 
+To build the examples, enable the `BUILD_EXAMPLES` option:
+
 ```bash
 mkdir build && cd build
-cmake .. -DCMAKE_TOOLCHAIN_FILE=/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake
+cmake .. -DCMAKE_TOOLCHAIN_FILE=/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake -DBUILD_EXAMPLES=ON
 cmake --build .
 cmake --install . --prefix ./install
 ```
@@ -249,7 +254,7 @@ gladiapp/
 ├── README.md
 ├── LICENSE
 ├── vcpkg.json                 # Dependency manifest
-├── examples/
+├── examples/                  # Optional examples (BUILD_EXAMPLES=ON)
 │   ├── common/
 │   │   └── apiKeyLoader.hpp   # API key management
 │   ├── example-rest/          # REST API example
