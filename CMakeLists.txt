@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+option(BUILD_EXAMPLES "Build example applications" OFF)
+
 # Include FetchContent for external dependencies
 include(FetchContent)
 
@@ -32,6 +34,7 @@ endif()
 # the main library
 add_subdirectory(gladiapp)
 
-# the examples
-add_subdirectory(examples/example-rest)
-add_subdirectory(examples/example-ws)
+# examples (optional)
+if(BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
