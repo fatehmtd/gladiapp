@@ -59,6 +59,12 @@ namespace gladiapp::v2::ws
                 tcpStream.connect(results);
 
                 ssl::stream<beast::tcp_stream> sslStream(std::move(tcpStream), sslContext);
+                // Set SNI hostname, required by servers behind SNI-based routing
+                if (!SSL_set_tlsext_host_name(sslStream.native_handle(), gladiapp::v2::common::HOST))
+                {
+                    throw beast::system_error(
+                        beast::error_code(static_cast<int>(::ERR_get_error()), net::error::get_ssl_category()));
+                }
                 sslStream.handshake(ssl::stream_base::client);
 
                 std::string region;
@@ -132,6 +138,12 @@ namespace gladiapp::v2::ws
                 tcpStream.connect(results);
 
                 ssl::stream<beast::tcp_stream> sslStream(std::move(tcpStream), sslContext);
+                // Set SNI hostname, required by servers behind SNI-based routing
+                if (!SSL_set_tlsext_host_name(sslStream.native_handle(), gladiapp::v2::common::HOST))
+                {
+                    throw beast::system_error(
+                        beast::error_code(static_cast<int>(::ERR_get_error()), net::error::get_ssl_category()));
+                }
                 sslStream.handshake(ssl::stream_base::client);
 
                 // Use buffer_body with the multipart data
@@ -182,6 +194,12 @@ namespace gladiapp::v2::ws
                 tcpStream.connect(results);
 
                 ssl::stream<beast::tcp_stream> sslStream(std::move(tcpStream), sslContext);
+                // Set SNI hostname, required by servers behind SNI-based routing
+                if (!SSL_set_tlsext_host_name(sslStream.native_handle(), gladiapp::v2::common::HOST))
+                {
+                    throw beast::system_error(
+                        beast::error_code(static_cast<int>(::ERR_get_error()), net::error::get_ssl_category()));
+                }
                 sslStream.handshake(ssl::stream_base::client);
 
                 // Use buffer_body with the multipart data
@@ -417,6 +435,12 @@ namespace gladiapp::v2::ws
 
                 spdlog::info("Performing SSL handshake...");
                 _webSocket.next_layer().set_verify_callback(ssl::host_name_verification(hostAndTarget.first));
+                // Set SNI hostname, required by servers behind SNI-based routing
+                if (!SSL_set_tlsext_host_name(_webSocket.next_layer().native_handle(), hostAndTarget.first.c_str()))
+                {
+                    throw beast::system_error(
+                        beast::error_code(static_cast<int>(::ERR_get_error()), net::error::get_ssl_category()));
+                }
                 _webSocket.next_layer().handshake(ssl::stream_base::client);
 
                 _webSocket.handshake(hostAndTarget.first, hostAndTarget.second);

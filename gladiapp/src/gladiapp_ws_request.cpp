@@ -93,7 +93,7 @@ nlohmann::json gladiapp::v2::ws::request::InitializeSessionRequest::RealtimeProc
 
     json["lipsync"] = lipsync.has_value() ? lipsync.value() : false;
 
-    json["context_adaptation"] = context_adaptation.has_value() ? context_adaptation.value() : false;
+    json["context_adaptation"] = context_adaptation.has_value() ? context_adaptation.value() : true;
 
     if (context.has_value())
     {
@@ -120,7 +120,7 @@ gladiapp::v2::ws::request::InitializeSessionRequest::RealtimeProcessing::Transla
     config.target_languages = json.value("target_languages", std::vector<std::string>());
     config.match_original_utterances = json.value("match_original_utterances", true);
     config.lipsync = json.value("lipsync", true);
-    config.context_adaptation = json.value("context_adaptation", false);
+    config.context_adaptation = json.value("context_adaptation", true);
     if(json.contains("context")) {
         config.context = json.value("context", "");
     }
@@ -321,12 +321,12 @@ gladiapp::v2::ws::request::InitializeSessionRequest::MessagesConfig gladiapp::v2
     MessagesConfig config;
     config.receive_partial_transcripts = json.value("receive_partial_transcripts", false);
     config.receive_final_transcripts = json.value("receive_final_transcripts", true);
-    config.receive_speech_events = json.value("receive_speech_events", false);
-    config.receive_pre_processing_events = json.value("receive_pre_processing_events", false);
-    config.receive_realtime_processing_events = json.value("receive_realtime_processing_events", false);
-    config.receive_post_processing_events = json.value("receive_post_processing_events", false);
-    config.receive_acknowledgments = json.value("receive_acknowledgments", false);
-    config.receive_errors = json.value("receive_errors", false);
+    config.receive_speech_events = json.value("receive_speech_events", true);
+    config.receive_pre_processing_events = json.value("receive_pre_processing_events", true);
+    config.receive_realtime_processing_events = json.value("receive_realtime_processing_events", true);
+    config.receive_post_processing_events = json.value("receive_post_processing_events", true);
+    config.receive_acknowledgments = json.value("receive_acknowledgments", true);
+    config.receive_errors = json.value("receive_errors", true);
     config.receive_lifecycle_events = json.value("receive_lifecycle_events", false);
     return config;
 }
@@ -395,12 +395,12 @@ gladiapp::v2::ws::request::InitializeSessionRequest::CallbackConfig gladiapp::v2
     config.receive_partial_transcripts = json.value("receive_partial_transcripts", false);
     config.receive_final_transcripts = json.value("receive_final_transcripts", true);
     config.receive_speech_events = json.value("receive_speech_events", false);
-    config.receive_pre_processing_events = json.value("receive_pre_processing_events", false);
-    config.receive_realtime_processing_events = json.value("receive_realtime_processing_events", false);
-    config.receive_post_processing_events = json.value("receive_post_processing_events", false);
+    config.receive_pre_processing_events = json.value("receive_pre_processing_events", true);
+    config.receive_realtime_processing_events = json.value("receive_realtime_processing_events", true);
+    config.receive_post_processing_events = json.value("receive_post_processing_events", true);
     config.receive_acknowledgments = json.value("receive_acknowledgments", false);
     config.receive_errors = json.value("receive_errors", false);
-    config.receive_lifecycle_events = json.value("receive_lifecycle_events", false);
+    config.receive_lifecycle_events = json.value("receive_lifecycle_events", true);
     return config;
 }
 

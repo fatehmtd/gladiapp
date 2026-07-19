@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(gladiapp_rest_example VERSION 1.0 LANGUAGES CXX)
+project(gladiapp_ws_example VERSION 1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -34,7 +34,7 @@ if(CMAKE_CONFIGURATION_TYPES)
 endif()
 
 # Installation rules
-install(TARGETS gladiapp_rest_example
+install(TARGETS gladiapp_ws_example
         RUNTIME DESTINATION bin)
 
 install(FILES testing.wav

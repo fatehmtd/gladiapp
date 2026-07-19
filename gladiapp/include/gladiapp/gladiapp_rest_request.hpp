@@ -1,5 +1,8 @@
+#pragma once
 #include <string>
 #include <vector>
+#include <optional>
+#include <unordered_map>
 #include <nlohmann/json.hpp>
 #include <memory>
 
@@ -11,7 +14,7 @@ namespace gladiapp
     namespace v2
     {
         namespace request
-        {                     
+        {
             /**
              * Represents the configuration for audio requests.
              * Contains the audio file's URL and its processing options.
@@ -20,18 +23,34 @@ namespace gladiapp
             {
                 std::string audio_url;
 
-                bool customVocabulary = false;
+                bool custom_vocabulary = false;
                 /**
                  * Represents the configuration for custom vocabulary.
                  */
                 struct CustomVocabularyConfig
                 {
-                    std::string value;
-                    std::vector<std::string> pronunciations;
-                    std::optional<float> intensity;
-                    std::optional<std::string> language;
+                    /**
+                     * Represents a single vocabulary entry.
+                     * Contains the word, its intensity, and possible pronunciations.
+                     */
+                    struct Vocabulary
+                    {
+                        std::string value;
+                        std::vector<std::string> pronunciations;
+                        std::optional<float> intensity;
+                        std::optional<std::string> language;
+
+                        nlohmann::json toJson() const;
+                    };
+                    std::vector<Vocabulary> vocabulary;
+                    /**
+                     * Default intensity for the custom vocabulary, between 0 and 1.
+                     */
+                    std::optional<float> default_intensity;
+
+                    nlohmann::json toJson() const;
                 };
-                std::vector<CustomVocabularyConfig> custom_vocabulary_config;
+                std::optional<CustomVocabularyConfig> custom_vocabulary_config;
 
                 bool callback = false;
                 /**
@@ -69,6 +88,14 @@ namespace gladiapp
                     };
                     std::vector<Format> formats;
 
+                    /**
+                     * Minimum duration of a subtitle in seconds.
+                     */
+                    std::optional<double> minimum_duration;
+                    /**
+                     * Maximum duration of a subtitle in seconds, between 1 and 30.
+                     */
+                    std::optional<double> maximum_duration;
                     std::optional<int> maximum_characters_per_row;
                     std::optional<int> maximum_rows_per_caption;
 
@@ -85,17 +112,15 @@ namespace gladiapp
 
                 bool diarization = false;
                 /**
-                 * Represents information about an audio file.
-                 * Contains the audio file's URL and its metadata.
+                 * Represents the configuration for speaker diarization.
                  */
                 struct DiarizationConfig
                 {
-                    int number_of_speakers;
-                    int min_speakers;
-                    int max_speakers;
-                    std::optional<bool> enhanced;
+                    std::optional<int> number_of_speakers;
+                    std::optional<int> min_speakers;
+                    std::optional<int> max_speakers;
                     nlohmann::json toJson() const;
-                };                
+                };
                 std::optional<DiarizationConfig> diarization_config;
 
                 bool translation = false;
@@ -119,7 +144,7 @@ namespace gladiapp
                     std::optional<bool> informal = false;
 
                     nlohmann::json toJson() const;
-                };                 
+                };
                 TranslationConfig translation_config;
 
                 bool summarization = false;
@@ -134,19 +159,13 @@ namespace gladiapp
                         BULLET_POINTS,
                         CONCISE
                     };
-                    std::vector<Type> types;
+                    Type type = Type::GENERAL;
 
-                    std::string toJson() const;
-                };                
+                    nlohmann::json toJson() const;
+                };
                 std::optional<SummarizationConfig> summarization_config;
 
-                bool moderation = false;
-
                 bool named_entity_recognition = false;
-
-                bool chapterization = false;
-
-                bool name_consistency = false;
 
                 bool custom_spelling = false;
                 /**
@@ -157,20 +176,8 @@ namespace gladiapp
                     std::unordered_map<std::string, std::vector<std::string>> spelling_dictionary;
 
                     nlohmann::json toJson() const;
-                };                
-                std::optional<CustomSpellingConfig> custom_spelling_config;
-
-                bool structured_data_extraction = false;
-                /**
-                 * Represents the configuration for structured data extraction.
-                 */
-                struct StructuredDataExtractionConfig
-                {
-                    std::vector<std::string> classes;
-
-                    nlohmann::json toJson() const;
                 };
-                std::optional<StructuredDataExtractionConfig> structured_data_extraction_config;
+                std::optional<CustomSpellingConfig> custom_spelling_config;
 
                 bool sentiment_analysis = false;
 
@@ -182,16 +189,48 @@ namespace gladiapp
                 struct AudioToLLMConfig
                 {
                     std::vector<std::string> prompts;
+                    /**
+                     * The model to use for the prompt execution, ex: "openai/gpt-5.4-nano".
+                     */
+                    std::optional<std::string> model;
 
                     nlohmann::json toJson() const;
                 };
                 std::optional<AudioToLLMConfig> audio_to_llm_config;
 
+                bool pii_redaction = false;
+                /**
+                 * Represents the configuration for PII (Personally Identifiable Information) redaction.
+                 */
+                struct PiiRedactionConfig
+                {
+                    /**
+                     * The entity types to redact, ex: "GDPR", "EMAIL_ADDRESS", "NAME", "PHONE_NUMBER".
+                     */
+                    std::vector<std::string> entity_types;
+
+                    enum ProcessedTextType
+                    {
+                        MARKER,
+                        MASK
+                    };
+                    /**
+                     * The type of processed text to return (marker or mask).
+                     */
+                    std::optional<ProcessedTextType> processed_text_type;
+
+                    nlohmann::json toJson() const;
+                };
+                std::optional<PiiRedactionConfig> pii_redaction_config;
+
                 bool sentences = false;
 
-                bool display_mode = false;
-
                 bool punctuation_enhanced = false;
+
+                /**
+                 * Custom metadata to attach to this transcription.
+                 */
+                std::optional<nlohmann::json> custom_metadata;
 
                 /**
                  * Represents the configuration for language settings.

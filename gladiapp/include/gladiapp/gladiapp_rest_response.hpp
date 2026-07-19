@@ -126,6 +126,7 @@ namespace gladiapp
 
                 std::optional<TranscriptionFile> file;
                 std::string request_params;
+                std::optional<nlohmann::json> custom_metadata;
 
                 /**
                  * Represents the object containing the transcription result.

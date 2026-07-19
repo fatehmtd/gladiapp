@@ -191,7 +191,7 @@ namespace gladiapp
                             /**
                              * Enables or disables context adaptation for translated audio.
                              */
-                            std::optional<bool> context_adaptation = false;
+                            std::optional<bool> context_adaptation = true;
                             /**
                              * Optional context to improve translation accuracy.
                              */
@@ -268,7 +268,7 @@ namespace gladiapp
                         std::optional<bool> receive_post_processing_events = true;
                         std::optional<bool> receive_acknowledgments = true;
                         std::optional<bool> receive_errors = true;
-                        std::optional<bool> receive_lifecycle_events = true;
+                        std::optional<bool> receive_lifecycle_events = false;
 
                         nlohmann::json toJson() const;
 

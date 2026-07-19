@@ -12,12 +12,17 @@ namespace gladiapp
             nlohmann::json TranscriptionRequest::DiarizationConfig::toJson() const
             {
                 nlohmann::json j;
-                j["number_of_speakers"] = number_of_speakers;
-                j["min_speakers"] = min_speakers;
-                j["max_speakers"] = max_speakers;
-                if (enhanced.has_value())
+                if (number_of_speakers.has_value())
                 {
-                    j["enhanced"] = enhanced.value();
+                    j["number_of_speakers"] = number_of_speakers.value();
+                }
+                if (min_speakers.has_value())
+                {
+                    j["min_speakers"] = min_speakers.value();
+                }
+                if (max_speakers.has_value())
+                {
+                    j["max_speakers"] = max_speakers.value();
                 }
                 return j;
             }
@@ -70,8 +75,22 @@ namespace gladiapp
                                    }
                                });
                 j["formats"] = formats;
-                j["maximum_characters_per_row"] = maximum_characters_per_row;
-                j["maximum_rows_per_caption"] = maximum_rows_per_caption;
+                if (minimum_duration.has_value())
+                {
+                    j["minimum_duration"] = minimum_duration.value();
+                }
+                if (maximum_duration.has_value())
+                {
+                    j["maximum_duration"] = maximum_duration.value();
+                }
+                if (maximum_characters_per_row.has_value())
+                {
+                    j["maximum_characters_per_row"] = maximum_characters_per_row.value();
+                }
+                if (maximum_rows_per_caption.has_value())
+                {
+                    j["maximum_rows_per_caption"] = maximum_rows_per_caption.value();
+                }
                 if (style.has_value())
                 {
                     j["style"] = style.value() == Style::DEFAULT ? "default" : "compliance";
@@ -89,27 +108,58 @@ namespace gladiapp
             }
 
             // SummarizationConfig implementations
-            std::string TranscriptionRequest::SummarizationConfig::toJson() const
+            nlohmann::json TranscriptionRequest::SummarizationConfig::toJson() const
             {
                 nlohmann::json j;
-                std::vector<std::string> typeStrings;
-                for (const auto &type : types)
+                switch (type)
                 {
-                    switch (type)
-                    {
-                    case GENERAL:
-                        typeStrings.push_back("general");
-                        break;
-                    case BULLET_POINTS:
-                        typeStrings.push_back("bullet_points");
-                        break;
-                    case CONCISE:
-                        typeStrings.push_back("concise");
-                        break;
-                    }
+                case GENERAL:
+                    j["type"] = "general";
+                    break;
+                case BULLET_POINTS:
+                    j["type"] = "bullet_points";
+                    break;
+                case CONCISE:
+                    j["type"] = "concise";
+                    break;
                 }
-                j["summarization_config"] = typeStrings;
-                return j.dump();
+                return j;
+            }
+
+            // CustomVocabularyConfig implementations
+            nlohmann::json TranscriptionRequest::CustomVocabularyConfig::Vocabulary::toJson() const
+            {
+                nlohmann::json j;
+                j["value"] = value;
+                if (!pronunciations.empty())
+                {
+                    j["pronunciations"] = pronunciations;
+                }
+                if (intensity.has_value())
+                {
+                    j["intensity"] = intensity.value();
+                }
+                if (language.has_value())
+                {
+                    j["language"] = language.value();
+                }
+                return j;
+            }
+
+            nlohmann::json TranscriptionRequest::CustomVocabularyConfig::toJson() const
+            {
+                nlohmann::json j;
+                nlohmann::json vocabularyArray = nlohmann::json::array();
+                for (const auto &entry : vocabulary)
+                {
+                    vocabularyArray.push_back(entry.toJson());
+                }
+                j["vocabulary"] = vocabularyArray;
+                if (default_intensity.has_value())
+                {
+                    j["default_intensity"] = default_intensity.value();
+                }
+                return j;
             }
 
             // CustomSpellingConfig implementations
@@ -120,19 +170,27 @@ namespace gladiapp
                 return j;
             }
 
-            // StructuredDataExtractionConfig implementations
-            nlohmann::json TranscriptionRequest::StructuredDataExtractionConfig::toJson() const
-            {
-                nlohmann::json j;
-                j["structured_data_extraction_config"] = classes;
-                return j;
-            }
-
             // AudioToLLMConfig implementations
             nlohmann::json TranscriptionRequest::AudioToLLMConfig::toJson() const
             {
                 nlohmann::json j;
                 j["prompts"] = prompts;
+                if (model.has_value())
+                {
+                    j["model"] = model.value();
+                }
+                return j;
+            }
+
+            // PiiRedactionConfig implementations
+            nlohmann::json TranscriptionRequest::PiiRedactionConfig::toJson() const
+            {
+                nlohmann::json j;
+                j["entity_types"] = entity_types;
+                if (processed_text_type.has_value())
+                {
+                    j["processed_text_type"] = processed_text_type.value() == ProcessedTextType::MARKER ? "MARKER" : "MASK";
+                }
                 return j;
             }
 
@@ -153,26 +211,10 @@ namespace gladiapp
                 j["audio_url"] = audio_url;
 
                 // Custom vocabulary
-                j["custom_vocabulary"] = customVocabulary;
-                if (customVocabulary && !custom_vocabulary_config.empty())
+                j["custom_vocabulary"] = custom_vocabulary;
+                if (custom_vocabulary && custom_vocabulary_config.has_value())
                 {
-                    nlohmann::json vocab_array = nlohmann::json::array();
-                    for (const auto &vocab : custom_vocabulary_config)
-                    {
-                        nlohmann::json vocab_obj;
-                        vocab_obj["value"] = vocab.value;
-                        vocab_obj["pronunciations"] = vocab.pronunciations;
-                        if (vocab.intensity.has_value())
-                        {
-                            vocab_obj["intensity"] = vocab.intensity.value();
-                        }
-                        if (vocab.language.has_value())
-                        {
-                            vocab_obj["language"] = vocab.language.value();
-                        }
-                        vocab_array.push_back(vocab_obj);
-                    }
-                    j["custom_vocabulary_config"] = vocab_array;
+                    j["custom_vocabulary_config"] = custom_vocabulary_config->toJson();
                 }
 
                 // Callback
@@ -207,38 +249,40 @@ namespace gladiapp
                 j["summarization"] = summarization;
                 if (summarization && summarization_config.has_value())
                 {
-                    j["summarization_config"] = nlohmann::json::parse(summarization_config->toJson())["summarization_config"];
+                    j["summarization_config"] = summarization_config->toJson();
                 }
 
                 // Boolean flags
-                j["moderation"] = moderation;
                 j["named_entity_recognition"] = named_entity_recognition;
-                j["chapterization"] = chapterization;
-                j["name_consistency"] = name_consistency;
                 j["sentiment_analysis"] = sentiment_analysis;
                 j["sentences"] = sentences;
-                j["display_mode"] = display_mode;
                 j["punctuation_enhanced"] = punctuation_enhanced;
 
                 // Custom spelling
                 j["custom_spelling"] = custom_spelling;
                 if (custom_spelling && custom_spelling_config.has_value())
                 {
-                    j["custom_spelling_config"] = custom_spelling_config->toJson()["spelling_dictionary"];
-                }
-
-                // Structured data extraction
-                j["structured_data_extraction"] = structured_data_extraction;
-                if (structured_data_extraction && structured_data_extraction_config.has_value())
-                {
-                    j["structured_data_extraction_config"] = structured_data_extraction_config->toJson()["structured_data_extraction_config"];
+                    j["custom_spelling_config"] = custom_spelling_config->toJson();
                 }
 
                 // Audio to LLM
                 j["audio_to_llm"] = audio_to_llm;
                 if (audio_to_llm && audio_to_llm_config.has_value())
                 {
-                    j["audio_to_llm_config"] = audio_to_llm_config->toJson()["prompts"];
+                    j["audio_to_llm_config"] = audio_to_llm_config->toJson();
+                }
+
+                // PII redaction
+                j["pii_redaction"] = pii_redaction;
+                if (pii_redaction && pii_redaction_config.has_value())
+                {
+                    j["pii_redaction_config"] = pii_redaction_config->toJson();
+                }
+
+                // Custom metadata
+                if (custom_metadata.has_value())
+                {
+                    j["custom_metadata"] = custom_metadata.value();
                 }
 
                 // Language config

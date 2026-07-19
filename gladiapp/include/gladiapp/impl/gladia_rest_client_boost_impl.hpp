@@ -105,6 +105,12 @@ namespace gladiapp
                     tcpStream.connect(results);
 
                     ssl::stream<beast::tcp_stream> sslStream(std::move(tcpStream), sslContext);
+                    // Set SNI hostname, required by servers behind SNI-based routing
+                    if (!SSL_set_tlsext_host_name(sslStream.native_handle(), gladiapp::v2::common::HOST))
+                    {
+                        throw beast::system_error(
+                            beast::error_code(static_cast<int>(::ERR_get_error()), net::error::get_ssl_category()));
+                    }
                     sslStream.handshake(ssl::stream_base::client);
 
                     // Use buffer_body with the multipart data
@@ -158,6 +164,12 @@ namespace gladiapp
                     tcpStream.connect(results);
 
                     ssl::stream<beast::tcp_stream> sslStream(std::move(tcpStream), sslContext);
+                    // Set SNI hostname, required by servers behind SNI-based routing
+                    if (!SSL_set_tlsext_host_name(sslStream.native_handle(), gladiapp::v2::common::HOST))
+                    {
+                        throw beast::system_error(
+                            beast::error_code(static_cast<int>(::ERR_get_error()), net::error::get_ssl_category()));
+                    }
                     sslStream.handshake(ssl::stream_base::client);
 
                     // Use buffer_body with the multipart data
@@ -214,6 +226,12 @@ namespace gladiapp
                     tcpStream.connect(results);
 
                     ssl::stream<beast::tcp_stream> sslStream(std::move(tcpStream), sslContext);
+                    // Set SNI hostname, required by servers behind SNI-based routing
+                    if (!SSL_set_tlsext_host_name(sslStream.native_handle(), gladiapp::v2::common::HOST))
+                    {
+                        throw beast::system_error(
+                            beast::error_code(static_cast<int>(::ERR_get_error()), net::error::get_ssl_category()));
+                    }
                     sslStream.handshake(ssl::stream_base::client);
 
                     // Use buffer_body with the multipart data
@@ -271,6 +289,12 @@ namespace gladiapp
                     tcpStream.connect(results);
 
                     ssl::stream<beast::tcp_stream> sslStream(std::move(tcpStream), sslContext);
+                    // Set SNI hostname, required by servers behind SNI-based routing
+                    if (!SSL_set_tlsext_host_name(sslStream.native_handle(), gladiapp::v2::common::HOST))
+                    {
+                        throw beast::system_error(
+                            beast::error_code(static_cast<int>(::ERR_get_error()), net::error::get_ssl_category()));
+                    }
                     sslStream.handshake(ssl::stream_base::client);
 
                     std::ostringstream stringStream;
@@ -366,6 +390,12 @@ namespace gladiapp
                     tcpStream.connect(results);
 
                     ssl::stream<beast::tcp_stream> sslStream(std::move(tcpStream), sslContext);
+                    // Set SNI hostname, required by servers behind SNI-based routing
+                    if (!SSL_set_tlsext_host_name(sslStream.native_handle(), gladiapp::v2::common::HOST))
+                    {
+                        throw beast::system_error(
+                            beast::error_code(static_cast<int>(::ERR_get_error()), net::error::get_ssl_category()));
+                    }
                     sslStream.handshake(ssl::stream_base::client);
 
                     std::ostringstream stringStream;

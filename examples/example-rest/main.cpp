@@ -48,7 +48,7 @@ int main(int ac, char **av)
         gladiapp::v2::request::TranscriptionRequest request;
         request.audio_url = response.audio_url;
         request.diarization = true;
-        request.moderation = true;
+        request.sentiment_analysis = true;
         request.subtitles = true;
         request.sentences = true;
         request.subtitles_config = gladiapp::v2::request::TranscriptionRequest::SubtitlesConfig();

@@ -273,9 +273,9 @@ namespace gladiapp
                 {
                     obj.metadata = Metadata::fromJson(json["metadata"].dump());
                 }
-                if (json.contains("result"))
+                if (json.contains("transcription"))
                 {
-                    obj.result = Result::fromJson(json["result"].dump());
+                    obj.result = Result::fromJson(json["transcription"].dump());
                 }
                 return obj;
             }
@@ -340,6 +340,10 @@ namespace gladiapp
                 if (json.contains("request_params") && json["request_params"].is_object())
                 {
                     result.request_params = json["request_params"].dump();
+                }
+                if (json.contains("custom_metadata") && json["custom_metadata"].is_object())
+                {
+                    result.custom_metadata = json["custom_metadata"];
                 }
                 if (json.contains("result") && json["result"].is_object())
                 {

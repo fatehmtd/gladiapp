@@ -242,7 +242,7 @@ void setOnTranslationCallback(std::function<void(const TranslationResponse&)>);
 
 ### Configuration
 
-**TranscriptionRequest**: `diarization`, `translation`, `subtitles`, `moderation`, `sentences`, `named_entity_recognition`, `sentiment_analysis`, `summarization`
+**TranscriptionRequest**: `diarization`, `translation`, `subtitles`, `sentences`, `named_entity_recognition`, `sentiment_analysis`, `summarization`, `custom_vocabulary`, `custom_spelling`, `audio_to_llm`, `pii_redaction`, `punctuation_enhanced`, `custom_metadata`
 
 **InitializeSessionRequest**: Audio format settings (`channels`, `bit_depth`, `encoding`, `sample_rate`), real-time processing options, post-processing settings
 
