@@ -1,6 +1,5 @@
 #include "../include/gladiapp/gladiapp_rest.hpp"
-#include "../include/gladiapp/impl/gladia_rest_client_boost_impl.hpp"
-#include "../include/gladiapp/gladiapp_rest.hpp"
+#include "../include/gladiapp/impl/gladia_rest_client_curl_impl.hpp"
 
 gladiapp::v2::GladiaRestClient::GladiaRestClient(const std::string &apiKey)
 {

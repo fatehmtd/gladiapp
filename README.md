@@ -25,8 +25,7 @@ A C++ client library for the Gladia audio transcription API. Supports both REST 
 
 Dependencies are managed automatically via `vcpkg.json`:
 
-- **Boost** (system, thread, beast) - HTTP client and networking
-- **OpenSSL** - SSL/TLS support
+- **curl** (SSL, WebSocket features) - HTTP and WebSocket client
 - **nlohmann/json** - JSON parsing
 - **spdlog** - Logging
 - **base64** - Base64 encoding/decoding (fetched via CMake)
@@ -76,9 +75,11 @@ cmake --build .
 
 If you prefer to install dependencies manually:
 
-- **macOS**: `brew install boost openssl cmake`
-- **Ubuntu/Debian**: `sudo apt-get install libboost-all-dev libssl-dev cmake build-essential`
+- **macOS**: `brew install curl cmake` (ensure curl was built with WebSocket support; the Homebrew formula's curl usually is not, so vcpkg is recommended instead)
+- **Ubuntu/Debian**: `sudo apt-get install libcurl4-openssl-dev cmake build-essential`
 - **Windows**: Use Visual Studio with vcpkg integration, or install dependencies manually
+
+> **Note:** gladiapp uses libcurl's native WebSocket support (`curl_ws_*`), which requires curl built with the `websockets` feature enabled. This is off by default in most system package managers, so vcpkg (which builds curl with `ssl` and `websockets` features per `vcpkg.json`) is the recommended path.
 
 ## Quick Start
 

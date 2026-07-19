@@ -1,7 +1,7 @@
 #include "gladiapp_ws.hpp"
 #include "gladiapp_ws_request.hpp"
 #include "gladiapp_ws_response.hpp"
-#include "impl/gladia_ws_client_boost_impl.hpp"
+#include "impl/gladia_ws_client_curl_impl.hpp"
 #include <spdlog/spdlog.h>
 #include <nlohmann/json.hpp>
 #include <base64.hpp>
@@ -39,12 +39,16 @@ response::LiveTranscriptionResult gladiapp::v2::ws::GladiaWebsocketClient::getRe
     nlohmann::json outputJson;
     if (_wsClientImpl->getResultById(id, outputJson, transcriptionError))
     {
-        return response::LiveTranscriptionResult::fromJson(outputJson);
+        try
+        {
+            return response::LiveTranscriptionResult::fromJson(outputJson);
+        }
+        catch (const std::exception &e)
+        {
+            spdlog::error("Failed to parse live transcription result: {}", e.what());
+        }
     }
-    else
-    {
-        return response::LiveTranscriptionResult();
-    }
+    return response::LiveTranscriptionResult();
 }
 
 bool gladiapp::v2::ws::GladiaWebsocketClient::deleteResult(const std::string &id, gladiapp::v2::response::TranscriptionError *transcriptionError) const

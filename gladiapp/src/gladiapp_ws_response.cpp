@@ -670,7 +670,12 @@ gladiapp::v2::ws::response::LiveTranscriptionResult::Result gladiapp::v2::ws::re
     Result result;
     result.metadata = Metadata::fromJson(json.at("metadata"));
     if(json.contains("messages") && json.at("messages").is_array()) {
-        result.messages = json.at("messages").get<std::vector<std::string>>();
+        std::vector<std::string> messages;
+        for (const auto &messageJson : json.at("messages"))
+        {
+            messages.push_back(messageJson.is_string() ? messageJson.get<std::string>() : messageJson.dump());
+        }
+        result.messages = std::move(messages);
     }
     if(json.contains("transcription") && json.at("transcription").is_object()) {
         result.transcription = Transcription::fromJson(json.at("transcription"));

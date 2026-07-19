@@ -9,22 +9,13 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 include(FetchContent)
 include(GNUInstallDirs)
 
-find_package(Boost REQUIRED COMPONENTS system thread)
-find_package(OpenSSL REQUIRED)
+find_package(CURL REQUIRED)
 
-if(NOT Boost_FOUND)
-    message(FATAL_ERROR "Boost not found. Please install Boost or set BOOST_ROOT.")
+if(NOT CURL_FOUND)
+    message(FATAL_ERROR "curl not found. Please install curl (built with SSL and WebSocket support).")
 endif()
 
-# Debug: Print Boost information
-message(STATUS "Boost_FOUND: ${Boost_FOUND}")
-message(STATUS "Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
-message(STATUS "Boost_LIBRARY_DIRS: ${Boost_LIBRARY_DIRS}")
-message(STATUS "Boost_LIBRARIES: ${Boost_LIBRARIES}")
-
-if(NOT OpenSSL_FOUND)
-    message(FATAL_ERROR "OpenSSL not found. Please install OpenSSL or set OPENSSL_ROOT_DIR.")
-endif()
+message(STATUS "CURL_VERSION_STRING: ${CURL_VERSION_STRING}")
 
 # Use vcpkg packages for spdlog and nlohmann-json
 find_package(spdlog REQUIRED CONFIG)
@@ -37,9 +28,6 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/tobiaslocker/base64.git
 )
 FetchContent_MakeAvailable(base64)
-
-include_directories(${Boost_INCLUDE_DIRS})
-include_directories(${OPENSSL_INCLUDE_DIR})
 
 add_library(gladiapp STATIC
     # error
@@ -60,9 +48,7 @@ target_link_libraries(gladiapp
     PRIVATE
     spdlog::spdlog
     nlohmann_json::nlohmann_json
-    Boost::system
-    Boost::thread
-    ${OPENSSL_LIBRARIES}
+    CURL::libcurl
     base64
 )
 

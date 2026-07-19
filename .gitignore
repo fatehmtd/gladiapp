@@ -58,3 +58,6 @@ _deps/
 *.gcov
 .vscode/
 install/
+
+# temp
+build*/
