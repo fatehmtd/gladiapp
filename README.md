@@ -203,7 +203,7 @@ See [`API_KEY_SETUP.md`](API_KEY_SETUP.md) for detailed instructions.
 ### GladiaRestClient
 
 ```cpp
-GladiaRestClient(const std::string& apiKey);
+GladiaRestClient(const std::string& apiKey, const std::string& caFilePath = {});
 
 // Upload audio file
 UploadResponse upload(const std::string& filePath, TranscriptionError* error = nullptr);
@@ -224,7 +224,7 @@ void deleteResult(const std::string& id, TranscriptionError* error = nullptr);
 ### GladiaWebsocketClient
 
 ```cpp
-GladiaWebsocketClient(const std::string& apiKey);
+GladiaWebsocketClient(const std::string& apiKey, const std::string& caFilePath = {});
 
 // Create WebSocket session
 std::shared_ptr<Session> connect(const InitializeSessionRequest& request, TranscriptionError* error = nullptr);

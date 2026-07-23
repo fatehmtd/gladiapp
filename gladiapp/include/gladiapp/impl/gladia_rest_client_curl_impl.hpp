@@ -16,7 +16,8 @@ namespace gladiapp
         class GladiaRestClientImpl
         {
         public:
-            GladiaRestClientImpl(const std::string &apiKey) : _apiKey(apiKey)
+            GladiaRestClientImpl(const std::string &apiKey, const std::string &caFilePath = {})
+                : _apiKey(apiKey), _caFilePath(caFilePath)
             {
             }
 
@@ -29,7 +30,8 @@ namespace gladiapp
                 try
                 {
                     auto httpResponse = curl_util::performUpload(
-                        curl_util::buildUrl(gladiapp::v2::common::UPLOAD_ENDPOINT), _apiKey, filePath);
+                        curl_util::buildUrl(gladiapp::v2::common::UPLOAD_ENDPOINT), _apiKey, filePath,
+                        "audio", "audio/mpeg", _caFilePath);
 
                     if (httpResponse.statusCode != 200)
                     {
@@ -55,7 +57,7 @@ namespace gladiapp
                 {
                     auto httpResponse = curl_util::performRequest(
                         curl_util::buildUrl(gladiapp::v2::common::PRERECORDED_ENDPOINT), "POST", _apiKey,
-                        transcriptionRequest.toJson().dump(), "application/json");
+                        transcriptionRequest.toJson().dump(), "application/json", _caFilePath);
 
                     spdlog::info("!!! Transcription response: {}, http code: {}", httpResponse.body, httpResponse.statusCode);
 
@@ -87,7 +89,7 @@ namespace gladiapp
                 {
                     auto httpResponse = curl_util::performRequest(
                         curl_util::buildUrl(std::string(gladiapp::v2::common::PRERECORDED_ENDPOINT) + "/" + id),
-                        "GET", _apiKey);
+                        "GET", _apiKey, "", "", _caFilePath);
 
                     if (httpResponse.statusCode != 200)
                     {
@@ -158,7 +160,7 @@ namespace gladiapp
                     }
 
                     auto httpResponse = curl_util::performRequest(
-                        curl_util::buildUrl(stringStream.str()), "GET", _apiKey);
+                        curl_util::buildUrl(stringStream.str()), "GET", _apiKey, "", "", _caFilePath);
 
                     if (httpResponse.statusCode != 200)
                     {
@@ -192,7 +194,7 @@ namespace gladiapp
                 {
                     auto httpResponse = curl_util::performRequest(
                         curl_util::buildUrl(std::string(gladiapp::v2::common::PRERECORDED_ENDPOINT) + "/" + id),
-                        "DELETE", _apiKey);
+                        "DELETE", _apiKey, "", "", _caFilePath);
 
                     if (httpResponse.statusCode != 202)
                     {
@@ -219,6 +221,7 @@ namespace gladiapp
 
         private:
             std::string _apiKey;
+            std::string _caFilePath;
         };
     }
 }

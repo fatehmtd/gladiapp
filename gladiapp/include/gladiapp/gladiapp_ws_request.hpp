@@ -6,6 +6,7 @@
 #include <vector>
 #include <unordered_map>
 #include <nlohmann/json.hpp>
+#include "json_optional.hpp"
 
 namespace gladiapp
 {

@@ -40,13 +40,26 @@ namespace gladiapp::v2::curl_util
         return "https://" + std::string(gladiapp::v2::common::HOST) + path;
     }
 
+    // mbedTLS (curl's TLS backend on Android) ships with no built-in trust
+    // anchors, so without an explicit CA file every handshake fails with
+    // "SSL peer certificate ... was not OK". caFilePath is empty on platforms
+    // where curl's platform default trust store is sufficient.
+    inline void applyCaFile(CURL *curl, const std::string &caFilePath)
+    {
+        if (!caFilePath.empty())
+        {
+            curl_easy_setopt(curl, CURLOPT_CAINFO, caFilePath.c_str());
+        }
+    }
+
     // Performs a synchronous HTTPS request against api.gladia.io.
     // method: "GET", "POST" or "DELETE". body/contentType are only used for POST.
     inline HttpResponse performRequest(const std::string &url,
                                        const std::string &method,
                                        const std::string &apiKey,
                                        const std::string &body = "",
-                                       const std::string &contentType = "")
+                                       const std::string &contentType = "",
+                                       const std::string &caFilePath = {})
     {
         ensureGlobalInit();
 
@@ -55,6 +68,7 @@ namespace gladiapp::v2::curl_util
         {
             throw std::runtime_error("Failed to initialize curl easy handle");
         }
+        applyCaFile(curl, caFilePath);
 
         struct curl_slist *headerList = nullptr;
         std::string apiKeyHeader = std::string(gladiapp::v2::headers::X_GLADIA_KEY) + ": " + apiKey;
@@ -108,7 +122,8 @@ namespace gladiapp::v2::curl_util
                                       const std::string &apiKey,
                                       const std::string &filePath,
                                       const std::string &fieldName = "audio",
-                                      const std::string &fileContentType = "audio/mpeg")
+                                      const std::string &fileContentType = "audio/mpeg",
+                                      const std::string &caFilePath = {})
     {
         ensureGlobalInit();
 
@@ -122,6 +137,7 @@ namespace gladiapp::v2::curl_util
         {
             throw std::runtime_error("Failed to initialize curl easy handle");
         }
+        applyCaFile(curl, caFilePath);
 
         struct curl_slist *headerList = nullptr;
         std::string apiKeyHeader = std::string(gladiapp::v2::headers::X_GLADIA_KEY) + ": " + apiKey;

@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <nlohmann/json.hpp>
 #include "gladiapp_error.hpp"
+#include "json_optional.hpp"
 #include "gladiapp_ws_request.hpp"
 #include "gladiapp_ws_response.hpp"
 
@@ -71,7 +72,14 @@ namespace gladiapp
                 GladiaWebsocketClient(const GladiaWebsocketClient &) = delete;
                 GladiaWebsocketClient &operator=(const GladiaWebsocketClient &) = delete;
 
-                GladiaWebsocketClient(const std::string &apiKey);
+                /**
+                 * @param apiKey Gladia API key.
+                 * @param caFilePath Optional path to a CA bundle (PEM) file for TLS verification.
+                 *        Leave empty to use curl's platform default trust store; needed on
+                 *        platforms where the TLS backend has no visibility into the OS trust
+                 *        store (e.g. Android with mbedTLS).
+                 */
+                GladiaWebsocketClient(const std::string &apiKey, const std::string &caFilePath = {});
                 ~GladiaWebsocketClient();
 
                 GladiaWebsocketClientSession *connect(const request::InitializeSessionRequest &initRequest,
@@ -91,6 +99,7 @@ namespace gladiapp
 
             private:
                 std::unique_ptr<GladiaWebsocketClientImpl> _wsClientImpl;
+                std::string _caFilePath;
             };
 
             // Forward declaration for the implementation details
@@ -106,7 +115,8 @@ namespace gladiapp
                 GladiaWebsocketClientSession(const GladiaWebsocketClientSession &) = delete;
                 GladiaWebsocketClientSession &operator=(const GladiaWebsocketClientSession &) = delete;
 
-                GladiaWebsocketClientSession(const response::InitializeSessionResponse &initResponse);
+                GladiaWebsocketClientSession(const response::InitializeSessionResponse &initResponse,
+                                            const std::string &caFilePath = {});
                 ~GladiaWebsocketClientSession();
 
                 /**

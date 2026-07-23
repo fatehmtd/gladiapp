@@ -6,10 +6,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Use vcpkg packages for spdlog and nlohmann-json
-find_package(spdlog REQUIRED CONFIG)
-find_package(nlohmann_json REQUIRED CONFIG)
-
 add_executable(gladiapp_rest_example main.cpp)
 
 target_link_libraries(gladiapp_rest_example PRIVATE

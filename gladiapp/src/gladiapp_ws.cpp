@@ -14,7 +14,8 @@ using namespace gladiapp::v2::ws;
  * GladiaWebsocketClient
  **************************************************************************************************************************************/
 
-gladiapp::v2::ws::GladiaWebsocketClient::GladiaWebsocketClient(const std::string &apiKey) : _wsClientImpl(std::make_unique<GladiaWebsocketClientImpl>(apiKey))
+gladiapp::v2::ws::GladiaWebsocketClient::GladiaWebsocketClient(const std::string &apiKey, const std::string &caFilePath)
+    : _wsClientImpl(std::make_unique<GladiaWebsocketClientImpl>(apiKey, caFilePath)), _caFilePath(caFilePath)
 {
 }
 
@@ -30,7 +31,7 @@ GladiaWebsocketClientSession *gladiapp::v2::ws::GladiaWebsocketClient::connect(c
     {
         return nullptr;
     }
-    return new GladiaWebsocketClientSession(initSessionResponse);
+    return new GladiaWebsocketClientSession(initSessionResponse, _caFilePath);
 }
 
 response::LiveTranscriptionResult gladiapp::v2::ws::GladiaWebsocketClient::getResult(const std::string &id,
@@ -60,8 +61,10 @@ bool gladiapp::v2::ws::GladiaWebsocketClient::deleteResult(const std::string &id
  * GladiaWebsocketClientSession
  **************************************************************************************************************************************/
 
-gladiapp::v2::ws::GladiaWebsocketClientSession::GladiaWebsocketClientSession(const response::InitializeSessionResponse &initResponse) : _wsClientSessionImpl(std::make_unique<GladiaWebsocketClientSessionImpl>(initResponse.url)),
-                                                                                                                                        _sessionInfo(initResponse)
+gladiapp::v2::ws::GladiaWebsocketClientSession::GladiaWebsocketClientSession(const response::InitializeSessionResponse &initResponse,
+                                                                             const std::string &caFilePath)
+    : _wsClientSessionImpl(std::make_unique<GladiaWebsocketClientSessionImpl>(initResponse.url, caFilePath)),
+      _sessionInfo(initResponse)
 {
 }
 

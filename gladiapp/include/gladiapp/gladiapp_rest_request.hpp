@@ -8,6 +8,7 @@
 
 #include "gladiapp_export.h"
 #include "gladiapp_error.hpp"
+#include "json_optional.hpp"
 
 namespace gladiapp
 {

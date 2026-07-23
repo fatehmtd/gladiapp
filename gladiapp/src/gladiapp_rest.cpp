@@ -1,9 +1,9 @@
 #include "../include/gladiapp/gladiapp_rest.hpp"
 #include "../include/gladiapp/impl/gladia_rest_client_curl_impl.hpp"
 
-gladiapp::v2::GladiaRestClient::GladiaRestClient(const std::string &apiKey)
+gladiapp::v2::GladiaRestClient::GladiaRestClient(const std::string &apiKey, const std::string &caFilePath)
 {
-    _restClientImpl = std::make_unique<GladiaRestClientImpl>(apiKey);
+    _restClientImpl = std::make_unique<GladiaRestClientImpl>(apiKey, caFilePath);
 }
 
 gladiapp::v2::GladiaRestClient::~GladiaRestClient()

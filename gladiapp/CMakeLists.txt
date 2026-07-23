@@ -9,17 +9,48 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 include(FetchContent)
 include(GNUInstallDirs)
 
-find_package(CURL REQUIRED)
+# A parent build (e.g. VASDK_ANDROID, which builds curl from source and
+# aliases it to CURL::libcurl since Android has no system curl for
+# find_package's module-mode FindCURL.cmake to discover) may already provide
+# this target — reuse it instead of forcing another lookup.
+if(NOT TARGET CURL::libcurl)
+    find_package(CURL REQUIRED)
 
-if(NOT CURL_FOUND)
-    message(FATAL_ERROR "curl not found. Please install curl (built with SSL and WebSocket support).")
+    if(NOT CURL_FOUND)
+        message(FATAL_ERROR "curl not found. Please install curl (built with SSL and WebSocket support).")
+    endif()
+
+    message(STATUS "CURL_VERSION_STRING: ${CURL_VERSION_STRING}")
+else()
+    message(STATUS "Using existing CURL::libcurl target")
 endif()
 
-message(STATUS "CURL_VERSION_STRING: ${CURL_VERSION_STRING}")
+# Fetch spdlog and nlohmann-json from source, reusing a parent build's
+# targets the same way CURL::libcurl is reused above.
+if(NOT TARGET spdlog::spdlog)
+    set(SPDLOG_BUILD_EXAMPLE OFF CACHE BOOL "Disable spdlog examples" FORCE)
+    set(SPDLOG_BUILD_TESTS OFF CACHE BOOL "Disable spdlog tests" FORCE)
+    FetchContent_Declare(
+        spdlog
+        GIT_REPOSITORY https://github.com/gabime/spdlog.git
+        GIT_TAG v1.15.1
+    )
+    FetchContent_MakeAvailable(spdlog)
+else()
+    message(STATUS "Using existing spdlog::spdlog target")
+endif()
 
-# Use vcpkg packages for spdlog and nlohmann-json
-find_package(spdlog REQUIRED CONFIG)
-find_package(nlohmann_json REQUIRED CONFIG)
+if(NOT TARGET nlohmann_json::nlohmann_json)
+    set(JSON_BuildTests OFF CACHE INTERNAL "Disable nlohmann-json tests" FORCE)
+    FetchContent_Declare(
+        nlohmann_json
+        GIT_REPOSITORY https://github.com/nlohmann/json.git
+        GIT_TAG v3.12.0
+    )
+    FetchContent_MakeAvailable(nlohmann_json)
+else()
+    message(STATUS "Using existing nlohmann_json::nlohmann_json target")
+endif()
 
 # fetch base64
 set(BASE64_ENABLE_TESTING OFF CACHE BOOL "Disable base64 testing" FORCE)

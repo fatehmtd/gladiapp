@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <nlohmann/json.hpp>
 #include "gladiapp_error.hpp"
+#include "json_optional.hpp"
 #include "gladiapp_rest_response.hpp"
 #include "gladiapp_ws_request.hpp"
 

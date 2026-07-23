@@ -31,7 +31,8 @@ namespace gladiapp::v2::ws
     class GladiaWebsocketClientImpl
     {
     public:
-        GladiaWebsocketClientImpl(const std::string &apiKey) : _apiKey(apiKey)
+        GladiaWebsocketClientImpl(const std::string &apiKey, const std::string &caFilePath = {})
+            : _apiKey(apiKey), _caFilePath(caFilePath)
         {
         }
 
@@ -60,7 +61,7 @@ namespace gladiapp::v2::ws
 
                 auto httpResponse = gladiapp::v2::curl_util::performRequest(
                     gladiapp::v2::curl_util::buildUrl(oss.str()), "POST", _apiKey,
-                    initRequest.toJson().dump(), "application/json");
+                    initRequest.toJson().dump(), "application/json", _caFilePath);
 
                 if (httpResponse.statusCode == 201)
                 {
@@ -92,7 +93,7 @@ namespace gladiapp::v2::ws
             {
                 auto httpResponse = gladiapp::v2::curl_util::performRequest(
                     gladiapp::v2::curl_util::buildUrl(std::string(gladiapp::v2::common::LIVE_ENDPOINT) + "/" + id),
-                    "GET", _apiKey, "", "application/json");
+                    "GET", _apiKey, "", "application/json", _caFilePath);
 
                 if (httpResponse.statusCode != 200)
                 {
@@ -120,7 +121,7 @@ namespace gladiapp::v2::ws
             {
                 auto httpResponse = gladiapp::v2::curl_util::performRequest(
                     gladiapp::v2::curl_util::buildUrl(std::string(gladiapp::v2::common::LIVE_ENDPOINT) + "/" + id),
-                    "DELETE", _apiKey, "", "application/json");
+                    "DELETE", _apiKey, "", "application/json", _caFilePath);
 
                 if (httpResponse.statusCode != 202)
                 {
@@ -142,15 +143,18 @@ namespace gladiapp::v2::ws
 
     private:
         std::string _apiKey;
+        std::string _caFilePath;
     };
 
     class GladiaWebsocketClientSessionImpl
     {
     public:
-        GladiaWebsocketClientSessionImpl(const std::string &endpoint) : _endpoint(endpoint),
-                                                                        _curl(nullptr),
-                                                                        _keepReading(false),
-                                                                        _canSendData(true)
+        GladiaWebsocketClientSessionImpl(const std::string &endpoint, const std::string &caFilePath = {})
+            : _endpoint(endpoint),
+              _caFilePath(caFilePath),
+              _curl(nullptr),
+              _keepReading(false),
+              _canSendData(true)
         {
             gladiapp::v2::curl_util::ensureGlobalInit();
         }
@@ -309,6 +313,7 @@ namespace gladiapp::v2::ws
 
             curl_easy_setopt(curl, CURLOPT_URL, _endpoint.c_str());
             curl_easy_setopt(curl, CURLOPT_USERAGENT, gladiapp::v2::common::USER_AGENT);
+            gladiapp::v2::curl_util::applyCaFile(curl, _caFilePath);
             // 2L: connect and prepare the handle for use with curl_ws_send/curl_ws_recv
             curl_easy_setopt(curl, CURLOPT_CONNECT_ONLY, 2L);
 
@@ -394,6 +399,7 @@ namespace gladiapp::v2::ws
 
     private:
         std::string _endpoint;
+        std::string _caFilePath;
         CURL *_curl;
         mutable std::mutex _sendMutex;
         std::thread _dataReceptionThread;

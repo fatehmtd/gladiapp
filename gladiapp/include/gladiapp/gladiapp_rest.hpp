@@ -27,7 +27,14 @@ namespace gladiapp
             GladiaRestClient(const GladiaRestClient &) = delete;
             GladiaRestClient &operator=(const GladiaRestClient &) = delete;
 
-            GladiaRestClient(const std::string &apiKey);
+            /**
+             * @param apiKey Gladia API key.
+             * @param caFilePath Optional path to a CA bundle (PEM) file for TLS verification.
+             *        Leave empty to use curl's platform default trust store; needed on
+             *        platforms where the TLS backend has no visibility into the OS trust
+             *        store (e.g. Android with mbedTLS).
+             */
+            GladiaRestClient(const std::string &apiKey, const std::string &caFilePath = {});
             ~GladiaRestClient();
 
             /**
